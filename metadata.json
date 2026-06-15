@@ -1,0 +1,6 @@
+{
+  "name": "Star AI Health Insurance",
+  "description": "Designing India's most modern premium health insurance experience with Star AI health advisor matches, interactive live claim tracker calendars, cashless network hospital indicators, and instant cost calculations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
