@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle, 
   Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
-  Check, Info, Award, Scale
+  Check, Info, Award, Scale, ChevronDown, ChevronUp
 } from "lucide-react";
 import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
 
@@ -36,6 +36,7 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
 
   const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null);
   const [selectedCompareId, setSelectedCompareId] = useState<string>("");
+  const [analysisOpen, setAnalysisOpen] = useState<boolean>(false);
 
   // Hardcoded list of common pre-existing conditions
   const PRE_EXISTED_OPTIONS = [
@@ -848,11 +849,94 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                               <h4 className="text-xl font-extrabold text-[#00338D] tracking-tight">{comparedPlan.name}</h4>
                             </div>
 
+                             {/* Head-to-Head Comparative Differences Highlights Panel - Accordion style */}
+                             <div className="bg-amber-50/40 border border-amber-200/50 rounded-xl overflow-hidden text-xs text-left">
+                               <button
+                                 type="button"
+                                 onClick={() => setAnalysisOpen(!analysisOpen)}
+                                 className="w-full p-4 flex justify-between items-center bg-amber-500/10 hover:bg-amber-500/15 transition-all text-left font-sans cursor-pointer"
+                               >
+                                 <span className="text-[10px] text-amber-800 font-extrabold uppercase tracking-widest flex items-center gap-1.5">
+                                   💡 Head-to-Head Difference Analysis
+                                 </span>
+                                 <div className="flex items-center gap-1.5 text-amber-900 text-[10px] font-bold">
+                                   <span>{analysisOpen ? "Hide" : "Show summary"}</span>
+                                   {analysisOpen ? (
+                                     <ChevronUp className="w-3.5 h-3.5" />
+                                   ) : (
+                                     <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
+                                   )}
+                                 </div>
+                               </button>
+
+                               <AnimatePresence initial={false}>
+                                 {analysisOpen && (
+                                   <motion.div
+                                     initial={{ height: 0, opacity: 0 }}
+                                     animate={{ height: "auto", opacity: 1 }}
+                                     exit={{ height: 0, opacity: 0 }}
+                                     transition={{ duration: 0.2, ease: "easeInOut" }}
+                                     className="border-t border-amber-200/50 px-4 pb-4 pt-3 space-y-2 overflow-hidden"
+                                   >
+                                     {/* Premium compare */}
+                                     <div className="flex justify-between items-start border-b border-amber-100/30 pb-2 last:border-0">
+                                       <span className="font-bold text-slate-500">💰 Monthly Premium:</span>
+                                       <span className="text-right font-bold">
+                                         {recommendation.monthlyPremium === comparedPlan.premium ? (
+                                           <span className="text-slate-600">Same price (₹{comparedPlan.premium}/mo)</span>
+                                         ) : recommendation.monthlyPremium < comparedPlan.premium ? (
+                                           <span className="text-emerald-700">Recommended is cheaper by ₹{comparedPlan.premium - recommendation.monthlyPremium}/mo</span>
+                                         ) : (
+                                           <span className="text-amber-700">This alternative is cheaper by ₹{recommendation.monthlyPremium - comparedPlan.premium}/mo</span>
+                                         )}
+                                       </span>
+                                     </div>
+
+                                     {/* Room rent compare */}
+                                     <div className="flex justify-between items-start border-b border-amber-100/30 pb-2 last:border-0">
+                                       <span className="font-bold text-slate-500">🛏️ Room Allotment:</span>
+                                       <span className="text-right text-slate-700 font-semibold max-w-[200px]">
+                                         {matchedPlan.roomRent === comparedPlan.roomRent ? (
+                                           <span className="text-slate-500">Matches recommended ({comparedPlan.roomRent})</span>
+                                         ) : (
+                                           <span>Recommended has <strong className="text-emerald-600 font-bold">{matchedPlan.roomRent}</strong> vs <strong className="text-amber-800 font-bold">{comparedPlan.roomRent}</strong></span>
+                                         )}
+                                       </span>
+                                     </div>
+
+                                     {/* Waiting period compare */}
+                                     <div className="flex justify-between items-start border-b border-amber-100/30 pb-2 last:border-0">
+                                       <span className="font-bold text-slate-500">⏱️ Pre-existing Wait:</span>
+                                       <span className="text-right text-slate-700 font-semibold max-w-[200px]">
+                                         {matchedPlan.waitingPeriod === comparedPlan.waitingPeriod ? (
+                                           <span className="text-slate-500">Matches recommended ({comparedPlan.waitingPeriod})</span>
+                                         ) : (
+                                           <span>Recommended wait: <strong className="text-emerald-600 font-bold">{matchedPlan.waitingPeriod}</strong> vs <strong className="text-amber-800 font-bold">{comparedPlan.waitingPeriod}</strong></span>
+                                         )}
+                                       </span>
+                                     </div>
+
+                                     {/* Co-pay compare */}
+                                     <div className="flex justify-between items-start last:border-0">
+                                       <span className="font-bold text-slate-500">🤝 Co-payment Rule:</span>
+                                       <span className="text-right text-slate-700 font-semibold max-w-[200px]">
+                                         {matchedPlan.coPay === comparedPlan.coPay ? (
+                                           <span className="text-slate-500">Matches recommended ({comparedPlan.coPay})</span>
+                                         ) : (
+                                           <span>Recommended co-pay rate is <strong className="text-emerald-600 font-bold">{matchedPlan.coPay}</strong> vs <strong className="text-amber-800 font-bold">{comparedPlan.coPay}</strong></span>
+                                         )}
+                                       </span>
+                                     </div>
+                                   </motion.div>
+                                 )}
+                               </AnimatePresence>
+                             </div>
+
                             {/* Premium details block */}
                             <div className="bg-slate-100/50 border border-slate-200 p-4.5 rounded-xl flex justify-between items-center">
                               <div className="text-left">
                                 <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider block">Estimated Base Premium</span>
-                                <span className="text-xs text-slate-400 font-semibold">Standard price list bracket</span>
+                                <span className="text-xs text-slate-450 font-semibold">Standard price list bracket</span>
                               </div>
                               <div className="text-right">
                                 <span className="text-2xl font-black text-slate-900">₹{comparedPlan.premium}</span>
@@ -867,25 +951,84 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                               </h5>
                               
                               <ul className="space-y-2.5 text-xs">
-                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
-                                  <span className="text-slate-500 font-bold shrink-0">🛡️ Max Coverage:</span>
-                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.coverage} sum insured protection</span>
+                                <li className={`flex flex-col gap-1.5 p-2.5 rounded-lg border transition ${
+                                  comparedPlan.coverage !== matchedPlan.coverage 
+                                    ? 'bg-amber-50/60 border-amber-200 text-slate-800 shadow-sm' 
+                                    : 'bg-white border-slate-200 text-slate-700'
+                                }`}>
+                                  <div className="flex items-start gap-2.5">
+                                    <span className="text-slate-500 font-bold shrink-0">🛡️ Max Coverage:</span>
+                                    <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.coverage} sum insured protection</span>
+                                  </div>
+                                  {comparedPlan.coverage !== matchedPlan.coverage && (
+                                    <div className="text-[10px] bg-amber-100 border border-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded-md w-fit ml-6 self-start animate-pulse">
+                                      ⚠️ DIFFERENT FROM RECOMMENDED: matches alternative upper range sizes
+                                    </div>
+                                  )}
                                 </li>
-                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
-                                  <span className="text-slate-500 font-bold shrink-0">🛏️ Room Allotment:</span>
-                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.roomRent}</span>
+
+                                <li className={`flex flex-col gap-1.5 p-2.5 rounded-lg border transition ${
+                                  comparedPlan.roomRent !== matchedPlan.roomRent 
+                                    ? 'bg-amber-50/60 border-amber-200 text-slate-800 shadow-sm' 
+                                    : 'bg-white border-slate-200 text-slate-700'
+                                }`}>
+                                  <div className="flex items-start gap-2.5">
+                                    <span className="text-slate-500 font-bold shrink-0">🛏️ Room Allotment:</span>
+                                    <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.roomRent}</span>
+                                  </div>
+                                  {comparedPlan.roomRent !== matchedPlan.roomRent && (
+                                    <div className="text-[10px] bg-amber-100 border border-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded-md w-fit ml-6 self-start">
+                                      ⚠️ DIFFERENT FROM RECOMMENDED: Recommended allows ({matchedPlan.roomRent})
+                                    </div>
+                                  )}
                                 </li>
-                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
-                                  <span className="text-slate-500 font-bold shrink-0">⏱️ Waiting Period:</span>
-                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.waitingPeriod}</span>
+
+                                <li className={`flex flex-col gap-1.5 p-2.5 rounded-lg border transition ${
+                                  comparedPlan.waitingPeriod !== matchedPlan.waitingPeriod 
+                                    ? 'bg-amber-50/60 border-amber-200 text-slate-800 shadow-sm' 
+                                    : 'bg-white border-slate-200 text-slate-700'
+                                }`}>
+                                  <div className="flex items-start gap-2.5">
+                                    <span className="text-slate-500 font-bold shrink-0">⏱️ Waiting Period:</span>
+                                    <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.waitingPeriod}</span>
+                                  </div>
+                                  {comparedPlan.waitingPeriod !== matchedPlan.waitingPeriod && (
+                                    <div className="text-[10px] bg-amber-100 border border-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded-md w-fit ml-6 self-start">
+                                      ⚠️ DIFFERENT FROM RECOMMENDED: Recommended wait is ({matchedPlan.waitingPeriod})
+                                    </div>
+                                  )}
                                 </li>
-                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
-                                  <span className="text-slate-500 font-bold shrink-0">🤝 Co-payment Rule:</span>
-                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.coPay}</span>
+
+                                <li className={`flex flex-col gap-1.5 p-2.5 rounded-lg border transition ${
+                                  comparedPlan.coPay !== matchedPlan.coPay 
+                                    ? 'bg-amber-50/60 border-amber-200 text-slate-800 shadow-sm' 
+                                    : 'bg-white border-slate-200 text-slate-700'
+                                }`}>
+                                  <div className="flex items-start gap-2.5">
+                                    <span className="text-slate-500 font-bold shrink-0">🤝 Co-payment Rule:</span>
+                                    <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.coPay}</span>
+                                  </div>
+                                  {comparedPlan.coPay !== matchedPlan.coPay && (
+                                    <div className="text-[10px] bg-amber-100 border border-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded-md w-fit ml-6 self-start">
+                                      ⚠️ DIFFERENT FROM RECOMMENDED: Recommended holds ({matchedPlan.coPay})
+                                    </div>
+                                  )}
                                 </li>
-                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
-                                  <span className="text-slate-500 font-bold shrink-0">📈 Audited Claim Ratio:</span>
-                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.claimRatio} audit verification</span>
+
+                                <li className={`flex flex-col gap-1.5 p-2.5 rounded-lg border transition ${
+                                  comparedPlan.claimRatio !== matchedPlan.claimRatio 
+                                    ? 'bg-amber-50/60 border-amber-200 text-slate-800 shadow-sm' 
+                                    : 'bg-white border-slate-200 text-slate-700'
+                                }`}>
+                                  <div className="flex items-start gap-2.5">
+                                    <span className="text-slate-550 font-bold shrink-0">📈 Audited Claim Ratio:</span>
+                                    <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.claimRatio} audit verification</span>
+                                  </div>
+                                  {comparedPlan.claimRatio !== matchedPlan.claimRatio && (
+                                    <div className="text-[10px] bg-amber-100 border border-amber-200 text-amber-800 font-bold px-2 py-0.5 rounded-md w-fit ml-6 self-start">
+                                      ⚠️ DIFFERENT FROM RECOMMENDED: Recommended holds ({matchedPlan.claimRatio})
+                                    </div>
+                                  )}
                                 </li>
                               </ul>
                             </div>

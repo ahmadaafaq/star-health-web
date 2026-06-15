@@ -89,15 +89,31 @@ export default function AIFloatingChat({ onStartAdvisor, isOpen, onToggle }: AIF
   return (
     <div id="ai-chat-floating-container" className="fixed bottom-6 right-6 z-50">
       
-      {/* Floating Sparkles Circular toggle button with notification ripple */}
+      {/* Floating Clarity Invite speech bubble for easy policy clarity guidance */}
+      {!isOpen && (
+        <div className="absolute bottom-18 right-0 mb-2 w-48 bg-slate-900 text-white text-[10px] font-bold p-3 rounded-2xl shadow-xl border border-slate-750 pointer-events-none animate-bounce">
+          <div className="relative text-center">
+            <span className="block text-amber-300">💡 Get Policy Clarity</span>
+            <span className="block text-slate-300 text-[9px] mt-0.5">Click to chat with Star AI!</span>
+            {/* Arrow down pointer */}
+            <div className="absolute -bottom-5 right-6 w-2.5 h-2.5 bg-slate-900 rotate-45 border-r border-b border-slate-750" />
+          </div>
+        </div>
+      )}
+
+      {/* Floating Sparkles Circular toggle button with notification ripple and custom blinking halo */}
       <button
         onClick={onToggle}
-        className={`w-14 h-14 rounded-full flex items-center justify-center text-white bg-star-red shadow-xl hover:scale-105 transition-all duration-300 relative border border-red-700 cursor-pointer ${isOpen ? 'rotate-90 bg-slate-900 border-slate-700' : ''}`}
+        className={`w-14 h-14 rounded-full flex items-center justify-center text-white bg-star-red shadow-xl hover:scale-105 transition-all duration-300 relative border border-red-700 cursor-pointer ${
+          isOpen 
+            ? 'rotate-90 bg-slate-900 border-slate-700' 
+            : 'animate-bot-glow bg-star-red'
+        }`}
       >
         {!isOpen && (
           <span className="absolute -top-1 -right-1 flex h-4 w-4">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-[#00338D] text-[8px] text-white flex items-center justify-center font-bold">1</span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-[#00338D] text-[8px] text-white flex items-center justify-center font-bold animate-pulse">1</span>
           </span>
         )}
         {isOpen ? <X className="w-5 h-5 text-white" /> : <MessageSquare className="w-6 h-6 text-white" />}
