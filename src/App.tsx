@@ -24,83 +24,147 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(false);
 
-  // Unified Plans List Database
+  // Unified Plans List — sourced from actual Star Health policy documents
   const PLANS_DATA: Plan[] = [
     {
-      id: "comprehensive",
-      name: "Star Comprehensive Plus",
-      category: "Family & Individual Protection",
-      tagline: "The absolute gold standard in worry-free health cover for families.",
-      premium: 1250,
-      coverage: "5 Lakh - 1 Crore",
-      waitingPeriod: "3 Years for Pre-Existing, Immediate for Accidents",
+      id: "family-health-optima",
+      name: "Family Health Optima",
+      category: "Family Floater Plan",
+      tagline: "All-in-one family floater with automatic restoration and newborn baby cover.",
+      premium: 1199,
+      coverage: "₹5 Lakh – ₹25 Lakh",
+      waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
       claimRatio: "98.2%",
-      coPay: "No Co-Pay (Zero out-of-pocket for network hospital treatments)",
-      roomRent: "Single Private A/C Room included with absolutely no rent capping.",
+      coPay: "No Co-Pay for network hospital treatments",
+      roomRent: "Single Private Room (no capping)",
       keyBenefits: [
-        "No room rent cap - stay in comfortable single private rooms",
-        "Maternity cover up to ₹1,00,000 with newborn baby protection",
-        "Cashless claims approved across 14,000+ top Indian hospitals",
-        "Automatic restoration of sum insured up to 100% on depletion"
+        "Automatic restoration of sum insured whenever exhausted",
+        "Additional SI for road traffic accident injuries",
+        "Newborn baby covered from day 1 of birth",
+        "Loyalty bonus accumulation up to 100% of sum insured",
+        "Covers modern treatments: immunotherapy, stem cell therapy & more"
       ],
-      description: "Ideal for growing families wanting complete freedom. It covers everything from maternity, air ambulance, outpatient consultations, to modern treatments with zero room-rent cap."
+      description: "A comprehensive family floater covering adults (18–65 years) and dependent children (16 days–25 years) with ₹5L–₹25L options. Offers automatic restoration, newborn cover, 100% loyalty bonus and modern treatment support. Available in 1 or 2 year tenure."
     },
     {
-      id: "diabetes",
-      name: "Star Diabetes Safe Specialty",
-      category: "Diabetes Relief",
-      tagline: "Dedicated coverage for Diabetes patients starting from Day 1.",
-      premium: 1100,
-      coverage: "3 Lakh - 10 Lakh",
-      waitingPeriod: "Immediate coverage for diabetes complications & insulin plans",
+      id: "arogya-sanjeevani",
+      name: "Arogya Sanjeevani",
+      category: "Standard Health Plan",
+      tagline: "IRDAI's standardised policy with sum insured up to ₹2 Crore.",
+      premium: 799,
+      coverage: "₹5 Lakh – ₹2 Crore",
+      waitingPeriod: "30-day initial waiting; 36 months for Pre-Existing Diseases",
+      claimRatio: "97.5%",
+      coPay: "5% co-pay on all claims",
+      roomRent: "Up to 2% of Sum Insured per day",
+      keyBenefits: [
+        "Cumulative bonus: 5% increase per claim-free year (max 50%)",
+        "AYUSH treatments fully covered up to sum insured",
+        "All day-care procedures covered",
+        "Cataract: up to 25% of SI or ₹40,000 per eye (whichever is lower)",
+        "ICU charges: up to 5% of SI per day (max ₹10,000/day)"
+      ],
+      description: "IRDAI's standard health policy offering wide coverage from ₹5L to ₹2Cr for individuals up to 65 years. Earns cumulative bonus every claim-free year, covers AYUSH, day-care, cataract and ICU expenses at reasonable premiums."
+    },
+    {
+      id: "medi-classic",
+      name: "Medi Classic (Individual)",
+      category: "Individual Health Plan",
+      tagline: "Classic individual health plan with lifelong renewal and long-term premium discounts.",
+      premium: 899,
+      coverage: "₹5 Lakh – ₹15 Lakh",
+      waitingPeriod: "30-day initial waiting; 36 months for Pre-Existing Diseases",
       claimRatio: "97.8%",
-      coPay: "10% Co-Pay optional for lower premium",
-      roomRent: "Private Room covered up to ₹5,000/day",
+      coPay: "No Co-Pay",
+      roomRent: "Single Private Room",
       keyBenefits: [
-        "Zero waiting period for treatments related to Diabetes Safe clauses",
-        "Covers insulin pumps, glucose monitoring, and clinical regular diagnostic visits",
-        "Covers serious diabetic complications (cardiac, renal, ophthalmic, retinopathy)",
-        "Wellness rewards & cashback up to 25% on maintaining normal HbA1c levels"
+        "Pre-hospitalization expenses: up to 30 days before admission",
+        "Post-hospitalization expenses: up to 60 days after discharge",
+        "Road ambulance: ₹750 per hospitalisation",
+        "Long-term discount: 10% on 2nd year premium, 12.5% on 3rd year",
+        "Instalment facility: monthly, quarterly or half-yearly payments"
       ],
-      description: "Designed for individuals living with Type 1 or Type 2 Diabetes. Skip the standard 3-4 year pre-existing waiting period; get specialized covers and regular health check-ups from day 1."
+      description: "An individual indemnity plan with ₹5L–₹15L coverage and lifelong renewability. Covers pre and post hospitalisation expenses, ambulance charges, and offers significant discounts for multi-year commitments with flexible payment instalments."
     },
     {
-      id: "assure",
-      name: "Star Senior Citizens Red Carpet",
-      category: "Senior Citizen Care",
-      tagline: "Eldercare security designed specifically for parents and grandparents (60-75).",
-      premium: 1850,
-      coverage: "5 Lakh - 25 Lakh",
-      waitingPeriod: "1 Year for specified pre-existing diseases",
-      claimRatio: "96.5%",
-      coPay: "No pre-insurance check-up required, 30% co-pay on claims",
-      roomRent: "Single Private Room covered up to ₹6,000 per day",
+      id: "star-assure",
+      name: "Star Health Assure",
+      category: "Comprehensive Floater Plan",
+      tagline: "Unlimited restoration, wellness rewards up to 20% discount — for up to 9 family members.",
+      premium: 1499,
+      coverage: "₹5 Lakh – ₹2 Crore",
+      waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
+      claimRatio: "98.0%",
+      coPay: "No Co-Pay",
+      roomRent: "Single Private Room (no capping)",
       keyBenefits: [
-        "No medical tests needed before buying this policy",
-        "Covers standard joint replacements, cataracts, and cardiac emergency treatments",
-        "Subsidized outpatient specialist consultations and home physiotherapy support",
-        "14,000+ network diagnostic & hospital partners with 2-hour cashless exit"
+        "Unlimited automatic restoration of sum insured in a policy year",
+        "Wellness discount up to 20% on premium for healthy lifestyle",
+        "Up to 9 family members covered under one floater",
+        "40% floater discount when 2 adults are covered together",
+        "5% early entry discount for insured aged ≤45 years at first purchase"
       ],
-      description: "Specifically created for senior parents. Avoid pre-policy screening complications while securing access to pre-existing coverages after just 12 months with pre-defined co-payment structures."
+      description: "A comprehensive plan for adults (18–75 years) and dependent children (16 days–25 years) offering ₹5L to ₹2Cr coverage. Unique for its unlimited restoration, wellness discount, early entry benefit and 1/2/3 year tenure options."
     },
     {
-      id: "family-delite",
-      name: "Star Family Delite Budget",
-      category: "Affordable Family Shield",
-      tagline: "Smart health cover for young families looking for optimal cost protection.",
-      premium: 650,
-      coverage: "3 Lakh - 15 Lakh",
-      waitingPeriod: "4 Years for Pre-Existing, Immediate for Accidents",
-      claimRatio: "97.4%",
-      coPay: "No co-pay unless chosen by the policyholder",
-      roomRent: "Shared Room / Private Room capped at 1% of Sum Insured daily",
+      id: "star-premier",
+      name: "Star Health Premier",
+      category: "Premium Wellness Plan",
+      tagline: "Wellness-integrated plan for 50+ with home care, AYUSH & modern treatment cover.",
+      premium: 1899,
+      coverage: "₹10 Lakh – ₹1 Crore",
+      waitingPeriod: "36 months for Pre-Existing Diseases",
+      claimRatio: "98.5%",
+      coPay: "No Co-Pay",
+      roomRent: "Single Private Room (no capping)",
       keyBenefits: [
-        "Most economical health shield targeting younger couples and kids",
-        "Pre and post hospitalization costs covered up to 60 days",
-        "No Claim Bonus raises your sum insured by 20% every claim-free year",
-        "Covers alternative AYUSH treatments (Ayurvedic, Homeopathy, Unani)"
+        "Designed for individuals aged 50+ with no upper age limit",
+        "No pre-acceptance medical screening required",
+        "Home care treatment and AYUSH treatment fully covered",
+        "Modern treatments including stem cell therapy & immunotherapy",
+        "Wellness points program: earn discounts through healthy activities"
       ],
-      description: "An incredibly budget-friendly policy for young working professionals and parents looking for reliable security without high premiums. Covers all essentials, day-care, and standard single-room stays."
+      description: "A premium indemnity plan for individuals aged 50 and above with sum insured options from ₹10L to ₹1Cr. No pre-policy medical tests, covers home care, AYUSH, modern treatments and a wellness rewards program for premium discounts."
+    },
+    {
+      id: "young-star",
+      name: "Young Star Insurance",
+      category: "Plan for Young Individuals",
+      tagline: "Unlimited restoration and wellness rewards tailored for young adults and families.",
+      premium: 699,
+      coverage: "₹5 Lakh – ₹1 Crore",
+      waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
+      claimRatio: "97.6%",
+      coPay: "No Co-Pay",
+      roomRent: "Single Private Room",
+      keyBenefits: [
+        "Available on individual and floater basis (Silver & Gold plans)",
+        "Unlimited automatic restoration of sum insured in a policy year",
+        "Wellness discount up to 20% on premium",
+        "Up to 9 family members under family floater",
+        "Covers day-care treatments, in-patient and nursing expenses"
+      ],
+      description: "Specifically designed for young adults and families (up to 75 years; children from 91 days). Offers unlimited sum insured restoration, wellness discounts up to 20%, and up to 9 family members under one floater in Silver or Gold variants."
+    },
+    {
+      id: "super-star",
+      name: "Super Star",
+      category: "Super-Comprehensive Plan",
+      tagline: "Star Health's most comprehensive plan — top-tier coverage with no compromises.",
+      premium: 2299,
+      coverage: "₹5 Lakh – ₹5 Crore",
+      waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
+      claimRatio: "98.8%",
+      coPay: "No Co-Pay",
+      roomRent: "Single Private Room (no capping)",
+      keyBenefits: [
+        "Widest sum insured range — up to ₹5 Crore coverage",
+        "AYUSH and modern advanced treatment fully covered",
+        "Home care and day-care treatments covered",
+        "Unlimited restoration of sum insured",
+        "All day-care procedures and modern surgical interventions"
+      ],
+      description: "Star Health's flagship super-comprehensive plan offering the broadest coverage range. No compromises on room rent, modern treatments, restoration or AYUSH. Ideal for individuals and families seeking the absolute best health protection."
     }
   ];
 

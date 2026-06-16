@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle, 
@@ -37,6 +37,151 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
   const [recommendation, setRecommendation] = useState<RecommendationResponse | null>(null);
   const [selectedCompareId, setSelectedCompareId] = useState<string>("");
   const [analysisOpen, setAnalysisOpen] = useState<boolean>(false);
+
+  // Supabase Lead Management & Admin Kanban Board state variables
+  const [isAdminView, setIsAdminView] = useState<boolean>(false);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState<boolean>(false);
+  const [leadSubmitted, setLeadSubmitted] = useState<boolean>(false);
+  const [submittingLead, setSubmittingLead] = useState<boolean>(false);
+  const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "" });
+  const [submittedLeadData, setSubmittedLeadData] = useState<any>(null);
+
+  const KANBAN_COLUMNS = [
+    { id: "open", title: "Open Leads", color: "bg-slate-100/70 border-slate-350" },
+    { id: "in_progress", title: "In Progress", color: "bg-blue-50/50 border-blue-200" },
+    { id: "communication", title: "Communication", color: "bg-amber-50/50 border-amber-200" },
+    { id: "won", title: "Won (Insured)", color: "bg-emerald-50/50 border-emerald-200" },
+    { id: "lost", title: "Lost", color: "bg-rose-50/50 border-rose-200" }
+  ];
+
+  const fetchLeads = async () => {
+    setLeadsLoading(true);
+    try {
+      const res = await fetch("/api/leads");
+      if (res.ok) {
+        const data = await res.json();
+        setLeads(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch leads:", e);
+    } finally {
+      setLeadsLoading(false);
+    }
+  };
+
+  const updateLeadStatus = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch("/api/update-lead-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, lead_status: newStatus })
+      });
+      if (res.ok) {
+        setLeads(prev => prev.map(l => l.id === id ? { ...l, lead_status: newStatus } : l));
+      }
+    } catch (e) {
+      console.error("Failed to update lead status:", e);
+    }
+  };
+
+  const renderKanban = () => {
+    if (leadsLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-[#00338D]" />
+          <p className="text-sm text-slate-500 font-bold">Retrieving leads database...</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6 text-left">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+          <div>
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900">Lead Management Control Board</h3>
+            <p className="text-xs text-slate-500 font-semibold mt-0.5">Drag or use status dropdowns to transition customer leads through columns.</p>
+          </div>
+          <button
+            onClick={fetchLeads}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-250 border border-slate-300 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            🔄 Refresh Leads
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 overflow-x-auto pb-4">
+          {KANBAN_COLUMNS.map(col => {
+            const colLeads = leads.filter(l => l.lead_status === col.id);
+            return (
+              <div key={col.id} className={`rounded-2xl border p-4 min-w-[220px] min-h-[420px] flex flex-col space-y-3 bg-slate-50/50 ${col.color}`}>
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                  <span className="text-[10px] font-black uppercase text-slate-700 tracking-wider">{col.title}</span>
+                  <span className="text-xs font-black bg-slate-200/80 px-2 py-0.5 rounded-full text-slate-800">{colLeads.length}</span>
+                </div>
+
+                <div className="flex-1 flex flex-col gap-3 overflow-y-auto max-h-[500px]">
+                  {colLeads.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-200/80 rounded-xl p-4 text-center">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">No leads in column</span>
+                    </div>
+                  ) : (
+                    colLeads.map(lead => {
+                      const planName = plans.find(p => p.id === lead.recommended_plan_id)?.name || lead.recommended_plan_id || "Unspecified";
+                      return (
+                        <div key={lead.id} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:shadow transition space-y-2 text-left">
+                          <div className="flex justify-between items-start gap-1">
+                            <span className="font-extrabold text-xs text-slate-900 block truncate max-w-[120px]" title={lead.name}>{lead.name}</span>
+                            <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded shrink-0 ${
+                              lead.lead_type === 'hot' ? 'bg-red-50 text-red-700 border border-red-150' :
+                              lead.lead_type === 'warm' ? 'bg-amber-50 text-amber-700 border border-amber-150' :
+                              'bg-blue-50 text-blue-700 border border-blue-155'
+                            }`}>
+                              {lead.lead_type === 'hot' ? '🔥 Hot' : lead.lead_type === 'warm' ? '⚡ Warm' : '❄️ Cold'}
+                            </span>
+                          </div>
+
+                          <div className="text-[10px] text-slate-500 font-medium space-y-0.5">
+                            <div className="truncate" title={lead.email}>📧 {lead.email}</div>
+                            <div>📞 {lead.phone}</div>
+                            <div>🎂 Age: {lead.age || "N/A"} | 🌆 {lead.city || "N/A"}</div>
+                            <div className="bg-blue-50/50 text-[#00338D] px-2 py-1 rounded font-bold text-[9px] w-fit mt-1">
+                              📋 {planName.replace("Star ", "")}
+                            </div>
+                          </div>
+
+                          {lead.ai_rank_explanation && (
+                            <div className="text-[9px] bg-slate-50 border border-slate-150 p-1.5 rounded text-slate-600 leading-normal max-h-[60px] overflow-y-auto">
+                              <strong>AI:</strong> {lead.ai_rank_explanation}
+                            </div>
+                          )}
+
+                          <div className="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase">Move Status:</label>
+                            <select
+                              value={lead.lead_status}
+                              onChange={(e) => updateLeadStatus(lead.id, e.target.value)}
+                              className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded px-1.5 py-1 text-[10px] font-bold text-slate-700 cursor-pointer"
+                            >
+                              <option value="open">Open</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="communication">Communication</option>
+                              <option value="won">Won (Insured)</option>
+                              <option value="lost">Lost</option>
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Hardcoded list of common pre-existing conditions
   const PRE_EXISTED_OPTIONS = [
@@ -163,6 +308,9 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
 
   const runRecommendation = async () => {
     setLoading(true);
+    let matchedPlanId = "";
+    let mockData: RecommendationResponse | null = null;
+
     try {
       const response = await fetch("/api/recommend", {
         method: "POST",
@@ -171,44 +319,44 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
       });
       if (response.ok) {
         const data: RecommendationResponse = await response.json();
-        setRecommendation(data);
-        const alternative = plans.find(p => p.id !== data.recommendedPlanId);
-        if (alternative) setSelectedCompareId(alternative.id);
-        onRecommendationReceived(data);
+        matchedPlanId = data.recommendedPlanId;
+        mockData = data;
       } else {
         throw new Error("API Recommend call failed");
       }
     } catch (e) {
       console.warn("Falling back to client-side recommendation engine");
-      // Fallback matching logic
-      const isDiabetes = formData.diabetes || formData.preExisting.includes("diabetes");
-      const hasSenior = formData.members.includes("parents") || Number(formData.age) >= 60;
+      const hasSenior = formData.members.includes("parents") || Number(formData.age) >= 50;
+      const isYoung = Number(formData.age) < 36;
       const isBudget = formData.budget === "low" || formData.budget === "modest";
       const hasPregnancy = formData.pregnancyPlan;
 
-      let matchPlan = plans[0]; // Star Comprehensive plus
-      let savings = "₹2,40,000";
-      let count = "14,000+";
+      let matchPlan = plans[0];
+      let savings = "₹2,60,000";
+      let count = "14,200+";
 
-      if (isDiabetes) {
-        matchPlan = plans.find(p => p.id === "diabetes") || plans[0];
-        savings = "1,85,000";
-        count = "13,800+";
-      } else if (hasSenior) {
-        matchPlan = plans.find(p => p.id === "assure") || plans[0];
-        savings = "3,10,000";
-        count = "12,950+";
+      if (hasSenior) {
+        matchPlan = plans.find(p => p.id === "star-premier") || plans[0];
+        savings = "₹3,40,000";
+        count = "13,900+";
       } else if (hasPregnancy) {
-        matchPlan = plans.find(p => p.id === "comprehensive") || plans[0];
-        savings = "2,60,000";
+        matchPlan = plans.find(p => p.id === "family-health-optima") || plans[0];
+        savings = "₹2,60,000";
         count = "14,200+";
+      } else if (isYoung && !formData.members.includes("parents")) {
+        matchPlan = plans.find(p => p.id === "young-star") || plans[0];
+        savings = "₹1,80,000";
+        count = "14,000+";
       } else if (isBudget) {
-        matchPlan = plans.find(p => p.id === "family-delite") || plans[0];
-        savings = "1,20,000";
-        count = "11,500+";
+        matchPlan = plans.find(p => p.id === "arogya-sanjeevani") || plans[0];
+        savings = "₹1,20,000";
+        count = "12,500+";
+      } else {
+        matchPlan = plans.find(p => p.id === "star-assure") || plans[0];
       }
 
-      const mockData: RecommendationResponse = {
+      matchedPlanId = matchPlan.id;
+      mockData = {
         recommendedPlanId: matchPlan.id,
         confidence: 96,
         whyExplanation: `Based on your family setup of ${formData.members.join(", ")} and your priority on coverage, the ${matchPlan.name} is the ideal fit. It avoids heavy room renting limitations, locks in affordable rates, and settles claims instantly within 2 hours of exit.`,
@@ -217,13 +365,47 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
         monthlyPremium: matchPlan.premium,
         highlightedBenefits: matchPlan.keyBenefits
       };
+    }
+
+    // Submit lead in all cases to register lead in Supabase automatically
+    try {
+      const isContactFilled = !!(leadForm.name || leadForm.email || leadForm.phone);
+      const leadRes = await fetch("/api/submit-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...leadForm,
+          age: formData.age,
+          members: formData.members,
+          city: formData.city,
+          budget: formData.budget,
+          preExistingDiseases: formData.preExisting,
+          diabetes: formData.diabetes,
+          parentsIncluded: formData.parentsIncluded,
+          employerInsurance: formData.employerInsurance,
+          pregnancyPlan: formData.pregnancyPlan,
+          preferredHospital: formData.preferredHospital,
+          recommendedPlanId: matchedPlanId
+        })
+      });
+      if (leadRes.ok) {
+        const leadData = await leadRes.json();
+        if (isContactFilled) {
+          setLeadSubmitted(true);
+        }
+        setSubmittedLeadData(leadData.lead);
+      }
+    } catch (e) {
+      console.error("Autosave lead failed:", e);
+    }
+
+    if (mockData) {
       setRecommendation(mockData);
-      const alternative = plans.find(p => p.id !== matchPlan.id);
+      const alternative = plans.find(p => p.id !== matchedPlanId);
       if (alternative) setSelectedCompareId(alternative.id);
       onRecommendationReceived(mockData);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const getMatchedPlan = (): Plan | undefined => {
@@ -237,8 +419,22 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
     <div id="ai-advisor-section" className="py-12 lg:py-20 border-t border-slate-200 bg-blue-50/30 text-slate-900 relative">
       <div className="absolute top-10 right-10 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-40 pointer-events-none" />
 
-      <div className={`mx-auto px-4 sm:px-6 transition-all duration-500 ${recommendation ? "max-w-6xl" : "max-w-4xl"}`}>
+      <div className={`mx-auto px-4 sm:px-6 transition-all duration-500 ${recommendation ? "max-w-6xl" : "max-w-4xl"} relative`}>
         
+        {/* Admin Toggle Button */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={() => {
+              const nextVal = !isAdminView;
+              setIsAdminView(nextVal);
+              if (nextVal) fetchLeads();
+            }}
+            className="px-4 py-2 bg-[#00338D] text-white hover:bg-blue-900 border border-blue-800 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-md"
+          >
+            {isAdminView ? "💻 Back to Advisor Flow" : "📊 Admin Kanban Board"}
+          </button>
+        </div>
+
         {/* Header Block */}
         <div className="text-center space-y-4 mb-10">
           <div className="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-star-red text-xs px-3.5 py-1.5 rounded-full font-bold uppercase tracking-wider">
@@ -256,15 +452,16 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
         {/* Wizard Card Body */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
           
-          <AnimatePresence mode="wait">
+          {isAdminView ? renderKanban() : (
+            <AnimatePresence mode="wait">
             {!recommendation ? (
               <motion.div key="questions" exit={{ opacity: 0, x: -50 }} className="space-y-6">
                 
                 {/* Progress Indicators */}
                 <div className="flex items-center justify-between pb-6 border-b border-slate-200">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-550">Question {step} of 4</span>
-                  <div className="flex gap-1.55">
-                    {[1, 2, 3, 4].map(s => (
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-550">Question {step} of 5</span>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map(s => (
                       <div 
                         key={s} 
                         className={`h-2 rounded-full transition-all duration-300 ${s === step ? 'w-8 bg-star-red' : 'w-2 bg-slate-200'}`} 
@@ -636,18 +833,59 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                           </button>
                         </div>
                       </div>
-
                       {/* Preferred hospital notes */}
-                      <div className="space-y-2">
-                        <label className="block text-sm font-bold text-slate-700">Any specific hospital alignment or landmark preference?</label>
-                        <input 
+                        <div className="space-y-2">
+                          <label className="block text-sm font-bold text-slate-700">Any specific hospital alignment or landmark preference?</label>
+                          <input 
+                            type="text"
+                            placeholder="e.g. Apollo Hospital, Fortis, Nanavati Mumbai"
+                            value={formData.preferredHospital}
+                            onChange={(e) => setFormData({ ...formData, preferredHospital: e.target.value })}
+                            className="w-full bg-slate-50 border border-slate-200 focus:border-star-blue focus:outline-none rounded-xl px-4 py-3 placeholder-slate-400 text-slate-900 font-bold text-sm"
+                          />
+                          <p className="text-[10px] text-slate-500">We cross-reference this to verify cashless network availability immediately in the next step.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {step === 5 && (
+                  <div className="space-y-4 text-left animate-fadeIn">
+                    <h3 className="text-xl sm:text-2xl font-extrabold text-[#00338D] flex items-center gap-2">
+                      <span>Secure Your Quote & Recommendation (Optional)</span>
+                    </h3>
+                    <p className="text-slate-500 text-sm">Provide your details to register this quote as a lead and obtain your AI-powered purchase priority rank.</p>
+
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 block">Your Full Name</label>
+                        <input
                           type="text"
-                          placeholder="e.g. Apollo Hospital, Fortis, Nanavati Mumbai"
-                          value={formData.preferredHospital}
-                          onChange={(e) => setFormData({ ...formData, preferredHospital: e.target.value })}
+                          placeholder="e.g. Shahbaz Ahmed (Optional)"
+                          value={leadForm.name}
+                          onChange={(e) => setLeadForm(prev => ({ ...prev, name: e.target.value }))}
                           className="w-full bg-slate-50 border border-slate-200 focus:border-star-blue focus:outline-none rounded-xl px-4 py-3 placeholder-slate-400 text-slate-900 font-bold text-sm"
                         />
-                        <p className="text-[10px] text-slate-500">We cross-reference this to verify cashless network availability immediately in the next step.</p>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 block">Email Address</label>
+                        <input
+                          type="email"
+                          placeholder="e.g. shahbaz@example.com (Optional)"
+                          value={leadForm.email}
+                          onChange={(e) => setLeadForm(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-star-blue focus:outline-none rounded-xl px-4 py-3 placeholder-slate-400 text-slate-900 font-bold text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600 block">Phone Number</label>
+                        <input
+                          type="tel"
+                          placeholder="e.g. 9876543210 (Optional)"
+                          value={leadForm.phone}
+                          onChange={(e) => setLeadForm(prev => ({ ...prev, phone: e.target.value }))}
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-star-blue focus:outline-none rounded-xl px-4 py-3 placeholder-slate-400 text-slate-900 font-bold text-sm"
+                        />
                       </div>
                     </div>
                   </div>
@@ -665,7 +903,7 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                     </button>
                   ) : <div />}
 
-                  {step < 4 ? (
+                  {step < 5 ? (
                     <button
                       onClick={nextStep}
                       className="px-6 py-3 bg-star-blue hover:bg-blue-900 text-white rounded-xl transition text-xs font-bold flex items-center gap-2 cursor-pointer"
@@ -687,7 +925,11 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 text-amber-300" />
-                          <span>Find My Best Plan</span>
+                          <span>
+                            {leadForm.name || leadForm.email || leadForm.phone 
+                              ? "🚀 Get Recommendations & Secure Quote" 
+                              : "Skip & Get Plan Recommendations"}
+                          </span>
                         </>
                       )}
                     </button>
@@ -1082,37 +1324,160 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                   </div>
                 )}
 
-                {/* Unified Bottom Booking Desk Action Block */}
-                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-6 mt-8">
-                  <div className="text-left space-y-1 max-w-xl">
-                    <h4 className="font-extrabold text-[#00338D] text-lg">Would you like to lock this protective shield in?</h4>
-                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                      All estimates are calibrated against Star Health's public regulatory brochures. Book now to bypass standard medical tests and secure immediate 15-minute callback clearance.
-                    </p>
+                {/* Supabase Lead Capture Form */}
+                {!leadSubmitted ? (
+                  <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 mt-8 space-y-4">
+                    <div className="text-left space-y-1">
+                      <h4 className="font-extrabold text-[#00338D] text-lg">🔒 Lock in Your Custom Quote & Benefits</h4>
+                      <p className="text-xs text-slate-500 font-medium">
+                        Enter your contact details to save this recommendation as a lead, calculate your AI purchase ranking, and schedule your instant callback.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1 text-left">
+                        <label className="text-xs font-bold text-slate-600">Full Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Shahbaz Ahmed"
+                          value={leadForm.name}
+                          onChange={(e) => setLeadForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full bg-white border border-slate-205 focus:border-star-blue focus:outline-none rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <label className="text-xs font-bold text-slate-600">Email Address</label>
+                        <input
+                          type="email"
+                          placeholder="e.g. shahbaz@example.com"
+                          value={leadForm.email}
+                          onChange={(e) => setLeadForm(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full bg-white border border-slate-205 focus:border-star-blue focus:outline-none rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <label className="text-xs font-bold text-slate-600">Phone Number</label>
+                        <input
+                          type="tel"
+                          placeholder="e.g. 9876543210"
+                          value={leadForm.phone}
+                          onChange={(e) => setLeadForm(prev => ({ ...prev, phone: e.target.value }))}
+                          className="w-full bg-white border border-slate-205 focus:border-star-blue focus:outline-none rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-900"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <button
+                        onClick={async () => {
+                          if (!leadForm.name || !leadForm.email || !leadForm.phone) {
+                            alert("Please fill out all contact fields to save your quote.");
+                            return;
+                          }
+                          setSubmittingLead(true);
+                          try {
+                            const res = await fetch("/api/submit-lead", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                ...leadForm,
+                                id: submittedLeadData?.id,
+                                age: formData.age,
+                                members: formData.members,
+                                city: formData.city,
+                                budget: formData.budget,
+                                preExistingDiseases: formData.preExisting,
+                                diabetes: formData.diabetes,
+                                parentsIncluded: formData.parentsIncluded,
+                                employerInsurance: formData.employerInsurance,
+                                pregnancyPlan: formData.pregnancyPlan,
+                                preferredHospital: formData.preferredHospital,
+                                recommendedPlanId: matchedPlan?.id
+                              })
+                            });
+                            if (res.ok) {
+                              const data = await res.json();
+                              setLeadSubmitted(true);
+                              setSubmittedLeadData(data.lead);
+                            } else {
+                              throw new Error("Lead submission failed");
+                            }
+                          } catch (e) {
+                            console.error(e);
+                            alert("Database submission failed. Please try again.");
+                          } finally {
+                            setSubmittingLead(false);
+                          }
+                        }}
+                        disabled={submittingLead}
+                        className="w-full md:w-auto px-8 py-3 bg-[#00338D] hover:bg-blue-900 text-white font-extrabold rounded-xl text-xs transition duration-150 cursor-pointer shadow-md disabled:opacity-50"
+                      >
+                        {submittingLead ? (
+                          <span className="flex items-center gap-1.5 justify-center">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving Quote...
+                          </span>
+                        ) : (
+                          "💾 Secure Quote & Save Lead"
+                        )}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto shrink-0">
-                    <a 
-                      href={`https://wa.me/911234567890?text=Hi%2C%20Star%20Health%21%20I%20just%20completed%20the%20AI%20Advising%20Discovery.%20I%20have%20chosen%20the%20${matchedPlan?.name}%20at%20%E2%82%B9${recommendation?.monthlyPremium}/month.%20Please%20verify%20and%20lock%20this%20in.`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-6 py-3.5 bg-green-600 hover:bg-green-700 text-white font-extrabold rounded-xl text-xs transition text-center shadow-lg shadow-green-600/10"
-                    >
-                      💬 Book plan via WhatsApp Call
-                    </a>
-                    <button 
-                      onClick={() => {
-                        alert(`Thank you! Our human verification desk has logged your current configuration: ${matchedPlan?.name}. We will reach out on your linked email in 15 minutes!`);
-                      }}
-                      className="px-6 py-3.5 bg-star-red hover:bg-red-700 text-white font-extrabold rounded-xl text-xs transition shadow-lg shadow-red-500/10 cursor-pointer"
-                    >
-                      ☎️ Request Instant Callback
-                    </button>
+                ) : (
+                  <div className="bg-emerald-50 border border-emerald-250 rounded-3xl p-6 sm:p-8 mt-8 space-y-5 text-left animate-fadeIn">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                        <Check className="w-6 h-6 stroke-[3]" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-emerald-900 text-lg">Lead Registered Successfully!</h4>
+                        <p className="text-xs text-emerald-700 font-semibold">Your custom quote has been synchronized with the Supabase lead repository.</p>
+                      </div>
+                    </div>
+                    
+                    {submittedLeadData && (
+                      <div className="bg-white border border-emerald-100 rounded-2xl p-4 space-y-3 shadow-sm">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                          <span className="text-xs font-bold text-slate-500">AI Priority Ranking Assignment:</span>
+                          <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border ${
+                            submittedLeadData.lead_type === 'hot' ? 'bg-red-50 text-red-700 border-red-200' :
+                            submittedLeadData.lead_type === 'warm' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}>
+                            {submittedLeadData.lead_type === 'hot' ? '🔥 Hot' : submittedLeadData.lead_type === 'warm' ? '⚡ Warm' : '❄️ Cold'} ({submittedLeadData.ai_rank_score}%)
+                          </span>
+                        </div>
+                        <div className="text-xs space-y-1">
+                          <span className="font-bold text-slate-650 block">AI Score Rationale:</span>
+                          <p className="text-slate-600 leading-relaxed italic bg-slate-50 p-2.5 rounded-lg border border-slate-200/50">
+                            "{submittedLeadData.ai_rank_explanation}"
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+                      <a 
+                        href={`https://wa.me/911234567890?text=Hi%2C%20Star%20Health%21%20I%20just%20completed%20the%20AI%20Advising%20Discovery.%20I%2520have%2520chosen%2520the%2520${matchedPlan?.name}%2520at%2520%25E2%25B9%2584${recommendation?.monthlyPremium}/month.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-3.5 bg-green-600 hover:bg-green-700 text-white font-extrabold rounded-xl text-xs transition text-center shadow-md flex-1"
+                      >
+                        💬 Book plan via WhatsApp Call
+                      </a>
+                      <button 
+                        onClick={() => {
+                          alert(`Thank you ${leadForm.name}! Our verification desk will reach out on ${leadForm.phone} in 15 minutes!`);
+                        }}
+                        className="px-6 py-3.5 bg-star-red hover:bg-red-700 text-white font-extrabold rounded-xl text-xs transition shadow-md flex-1 cursor-pointer"
+                      >
+                        ☎️ Request Callback
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
               </motion.div>
             )}
-          </AnimatePresence>
+            </AnimatePresence>
+          )}
 
         </div>
 

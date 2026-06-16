@@ -10,7 +10,7 @@ export default function ExplainSimply() {
       title: "Room Rent Limit",
       corporate: "No sub-limits or capping on single private room board charges.",
       plain: "Stay in a comfortable private room during hospitalization without worrying about extra hidden charges.",
-      why: "If you exceed a capped room rent, hospitals often inflate pricing on surgery, medicines, and doctors by 50% too! That's why Star Comprehensive bypasses all capping metrics.",
+      why: "If you exceed a capped room rent, hospitals often inflate pricing on surgery, medicines, and doctors by 50% too! That's why Star Health Assure and Family Health Optima bypass all capping metrics.",
       icon: <Layers className="w-5 h-5 text-indigo-400" />
     },
     {
@@ -26,7 +26,7 @@ export default function ExplainSimply() {
       title: "Pre-Existing (PED)",
       corporate: "Waiting periods applicable on pre-recorded pathology or diseases.",
       plain: "If you have high BP or past asthma, there is a waiting timeline before claims for those specifically trigger.",
-      why: "Standard policies require 3 to 4 years wait. With our specialized models, diabetes safe plans have zero wait, and basic packages can reduce periods automatically.",
+      why: "Standard policies require 3 to 4 years wait. With our actual policies, Young Star Insurance and Family Health Optima offer excellent pre-existing disease terms, and other plans can reward you for a healthy lifestyle.",
       icon: <EyeOff className="w-5 h-5 text-rose-400" />
     },
     {
@@ -42,7 +42,7 @@ export default function ExplainSimply() {
       title: "Co-Payment Clause",
       corporate: "Compulsory deductibles payable by the insured party on claim exits.",
       plain: "A shared cost rule where you pay a flat percentage of the bill, and we cover the remaining heavy chunk.",
-      why: "We avoid co-pay inside our core comprehensive models so you pay ₹0. It's only optional inside elder parent policies to lower premiums.",
+      why: "We avoid co-pay inside our core comprehensive models so you pay ₹0. It's only applicable in standard policies like Arogya Sanjeevani which has a 5% copay, or optional inside senior policies to lower premiums.",
       icon: <Activity className="w-5 h-5 text-emerald-400" />
     }
   ];

@@ -8,22 +8,22 @@ export default function ProductDiscovery({ onSelectCategory }: ProductDiscoveryP
   
   const DISCOVERY_CARDS = [
     {
-      id: "myself",
-      title: "Myself (Individual)",
-      icon: <Shield className="w-6 h-6 text-star-blue" />,
-      color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-blue-900/5",
-      border: "border-slate-250 hover:border-star-blue/40",
-      desc: "Comprehensive room-by-room coverages customized for self-reliant working professionals & freelancers.",
-      cta: "Explore self plans"
-    },
-    {
       id: "family",
-      title: "Family Protection",
+      title: "Family Floater Protection",
       icon: <Users className="w-6 h-6 text-star-red" />,
       color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-red-500/5",
       border: "border-slate-250 hover:border-star-red/40",
-      desc: "Secure your spouse, kids & dependents under one unified float sum with direct maternity & newborn safety locks.",
+      desc: "Secure your spouse, kids, and dependents under one unified float sum with Family Health Optima or Star Health Assure.",
       cta: "Explore family shields"
+    },
+    {
+      id: "individual",
+      title: "Individual Health Plan",
+      icon: <Shield className="w-6 h-6 text-star-blue" />,
+      color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-blue-900/5",
+      border: "border-slate-250 hover:border-star-blue/40",
+      desc: "Classic individual coverage with lifelong renewability and long-term premium discounts under Medi Classic (Individual).",
+      cta: "Explore individual plans"
     },
     {
       id: "parents",
@@ -31,44 +31,35 @@ export default function ProductDiscovery({ onSelectCategory }: ProductDiscoveryP
       icon: <HeartPulse className="w-6 h-6 text-emerald-600" />,
       color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-emerald-500/5",
       border: "border-slate-250 hover:border-emerald-550/40",
-      desc: "Avoid stressful pre-policy health checkups. Tailored specifically for parents aged 60+ with rapid pre-existing waivers.",
+      desc: "Avoid pre-policy screening complications. Specialized coverages for parents aged 50+ under Star Health Premier.",
       cta: "Explore elder protectors"
     },
     {
-      id: "diabetes",
-      title: "Diabetes Care",
+      id: "young",
+      title: "Young Adults & Families",
       icon: <Award className="w-6 h-6 text-amber-600" />,
       color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-amber-500/5",
       border: "border-slate-250 hover:border-amber-500/40",
-      desc: "Specific immediate Day-1 covers for type-1/type-2 diabetes complications, bypass dialysis limitations, and wellness discounts.",
-      cta: "Explore diabetes safe"
+      desc: "Tailored for young adults up to 36. High wellness reward discounts and automatic restoration under Young Star Insurance.",
+      cta: "Explore youth plans"
     },
     {
-      id: "critical",
-      title: "Critical Illness Shield",
-      icon: <ShieldAlert className="w-6 h-6 text-rose-600" />,
-      color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-rose-500/5",
-      border: "border-slate-250 hover:border-rose-500/40",
-      desc: "Direct tax-free lumpsum payout upon diagnosis of 37 critical organ issues or cancer to sustain lifestyle recovery budgets.",
-      cta: "Explore lumpsum cash"
-    },
-    {
-      id: "travel",
-      title: "Travel Protection",
-      icon: <Plane className="w-6 h-6 text-cyan-600" />,
-      color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-cyan-500/5",
-      border: "border-slate-250 hover:border-cyan-500/40",
-      desc: "Emergency cashless treatment, missed flight coverages, and baggage lost protection across 150+ countries.",
-      cta: "Explore travel passes"
-    },
-    {
-      id: "business",
-      title: "Business & Corporate Group",
+      id: "standard",
+      title: "Standardized Budget Shield",
       icon: <Briefcase className="w-6 h-6 text-indigo-600" />,
       color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-indigo-500/5",
       border: "border-slate-250 hover:border-indigo-550/40",
-      desc: "Retain high-performance talent with corporate health float policies featuring immediate maternity, OPD, & mental wellness.",
-      cta: "Explore company quotes"
+      desc: "IRDAI's standardised, pocket-friendly Arogya Sanjeevani health cover covering all basic healthcare and AYUSH treatments.",
+      cta: "Explore standard plans"
+    },
+    {
+      id: "super",
+      title: "Premium & High-Sum Cover",
+      icon: <ShieldAlert className="w-6 h-6 text-rose-600" />,
+      color: "from-slate-50/50 to-white hover:shadow-xl hover:shadow-rose-500/5",
+      border: "border-slate-250 hover:border-rose-500/40",
+      desc: "Top-tier premium protection up to ₹5 Crore sum insured with no capping on room rent or modern treatments under Super Star.",
+      cta: "Explore premium coverage"
     }
   ];
 

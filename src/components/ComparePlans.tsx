@@ -25,75 +25,75 @@ export default function ComparePlans({ onStartAdvisor }: ComparePlansProps) {
 
   const PLAN_COLUMNS = [
     {
-      id: "comprehensive",
-      name: "Star Comprehensive Plus",
+      id: "star-assure",
+      name: "Star Health Assure",
       popular: true,
       data: {
-        premium: "₹1,250",
-        roomRent: "Private Single AC Room (No capping limit)",
+        premium: "₹1,499",
+        roomRent: "Single Private Room (no capping)",
         cashless: "14,000+ top centers",
         waiting: "36 Months (Reduced to immediate for accidents)",
-        opd: "Up to ₹5,000 yearly outpatient checks",
-        daycare: "Fully covered (100% of costs claimable)",
-        restoration: "100% Automatic instantaneous reload",
+        opd: "Wellness discount up to 20% on premium",
+        daycare: "Fully covered (all day-care procedures)",
+        restoration: "Unlimited automatic restoration in a policy year",
         ncb: "Up to 100% booster on claim-free runs",
-        maternity: "₹1,00,000 with newborn support",
+        maternity: "Newborn baby covered from day 1",
         icu: "Fully covered - zero deductions",
-        ambulance: "Fully covered (Road & Air ambulance)"
+        ambulance: "Fully covered (Road ambulance)"
       }
     },
     {
-      id: "diabetes",
-      name: "Star Diabetes Safe Specialty",
+      id: "family-health-optima",
+      name: "Family Health Optima",
       popular: false,
       data: {
-        premium: "₹1,100",
-        roomRent: "Capped daily at ₹5,000/day private limit",
-        cashless: "13,800+ top centers",
-        waiting: "Zero waiting period for direct diabetic safety issues",
-        opd: "Comprehensive glucose tests & clinician visits included",
-        daycare: "Fully covered for specified sub-procedures",
+        premium: "₹1,199",
+        roomRent: "Single Private Room (no capping)",
+        cashless: "14,000+ top centers",
+        waiting: "36 Months (Reduced to immediate for accidents)",
+        opd: "Outpatient checks not directly covered",
+        daycare: "Fully covered (all day-care procedures)",
+        restoration: "100% Automatic restoration whenever exhausted",
+        ncb: "Loyalty bonus accumulation up to 100% of sum insured",
+        maternity: "Newborn baby covered from day 1 of birth",
+        icu: "Fully covered - zero deductions",
+        ambulance: "Additional SI for road traffic accident injuries"
+      }
+    },
+    {
+      id: "star-premier",
+      name: "Star Health Premier",
+      popular: false,
+      data: {
+        premium: "₹1,899",
+        roomRent: "Single Private Room (no capping)",
+        cashless: "14,000+ top centers",
+        waiting: "36 Months (Pre-existing diseases)",
+        opd: "AYUSH and home care fully covered",
+        daycare: "Fully covered (all day-care procedures)",
         restoration: "100% Automatic restoration once per year",
-        ncb: "Up to 50% extra sum booster",
-        maternity: "Not covered inside this specialty plan",
-        icu: "Fully covered up to sum insured",
-        ambulance: "Capped to ₹3,000 per admission"
+        ncb: "Wellness rewards points program",
+        maternity: "Not covered",
+        icu: "Fully covered - zero deductions",
+        ambulance: "Fully covered (Road ambulance)"
       }
     },
     {
-      id: "assure",
-      name: "Star Senior Citizens Red Carpet",
+      id: "arogya-sanjeevani",
+      name: "Arogya Sanjeevani",
       popular: false,
       data: {
-        premium: "₹1,850",
-        roomRent: "Private Room capped at ₹6,000/day limit",
-        cashless: "12,900+ top centers",
-        waiting: "12 Months (Shorter waiting with 30% co-pay rules)",
-        opd: "Outpatient physiotherapy checks included",
-        daycare: "Fully covered for cataract & joint care",
-        restoration: "Not applicable inside elder safe",
-        ncb: "Not applicable",
-        maternity: "Not applicable",
-        icu: "Capped up to 2% of sum insured daily",
-        ambulance: "Fully covered up to ₹2,500 limits"
-      }
-    },
-    {
-      id: "family-delite",
-      name: "Star Family Delite Budget",
-      popular: false,
-      data: {
-        premium: "₹650",
-        roomRent: "Shared Room or Private capped at 1% daily",
-        cashless: "11,500+ top centers",
-        waiting: "48 Months (4-Year pre-existing cap)",
-        opd: "Not covered",
-        daycare: "400+ specified surgeries only",
-        restoration: "50% reload on complete exhaustion",
-        ncb: "20% booster every claim-free year",
-        maternity: "Capped to ₹20,000 basic",
-        icu: "Capped at 2% of sum insured daily",
-        ambulance: "Capped to ₹1,500 per alert"
+        premium: "₹799",
+        roomRent: "Up to 2% of Sum Insured per day",
+        cashless: "14,000+ top centers",
+        waiting: "36 Months (30-day initial waiting period)",
+        opd: "Outpatient checks not covered",
+        daycare: "Fully covered (all day-care procedures)",
+        restoration: "Not applicable (Standard policy limits)",
+        ncb: "Cumulative bonus: 5% increase per claim-free year (max 50%)",
+        maternity: "Not covered",
+        icu: "Up to 5% of Sum Insured per day (max ₹10,000/day)",
+        ambulance: "Road ambulance capped as per limits"
       }
     }
   ];
@@ -154,8 +154,8 @@ export default function ComparePlans({ onStartAdvisor }: ComparePlansProps) {
                   
                   {PLAN_COLUMNS.map((plan, idx) => {
                     // Check local visibility based on selection preset
-                    if (selectedPreset === 'family' && plan.id !== 'comprehensive' && plan.id !== 'family-delite') return null;
-                    if (selectedPreset === 'specialty' && plan.id !== 'diabetes' && plan.id !== 'assure') return null;
+                    if (selectedPreset === 'family' && plan.id !== 'star-assure' && plan.id !== 'family-health-optima') return null;
+                    if (selectedPreset === 'specialty' && plan.id !== 'star-premier' && plan.id !== 'arogya-sanjeevani') return null;
 
                     return (
                       <th key={plan.id} className="p-5 w-1/4 relative border-r border-slate-200 last:border-0 text-left">
@@ -166,6 +166,14 @@ export default function ComparePlans({ onStartAdvisor }: ComparePlansProps) {
                         )}
                         <div className="text-sm font-extrabold text-star-blue mt-2">{plan.name}</div>
                         <div className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">STAR PREMIUM SECTOR</div>
+                        <a
+                          href={`https://efsgbittghkwjoklhqfk.supabase.co/storage/v1/object/public/policies/${plan.id}.pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-star-blue hover:text-blue-900 text-[10px] font-bold rounded-lg transition"
+                        >
+                          📥 Download Policy PDF
+                        </a>
                       </th>
                     );
                   })}
@@ -183,8 +191,8 @@ export default function ComparePlans({ onStartAdvisor }: ComparePlansProps) {
                     </td>
                     
                     {PLAN_COLUMNS.map(plan => {
-                      if (selectedPreset === 'family' && plan.id !== 'comprehensive' && plan.id !== 'family-delite') return null;
-                      if (selectedPreset === 'specialty' && plan.id !== 'diabetes' && plan.id !== 'assure') return null;
+                      if (selectedPreset === 'family' && plan.id !== 'star-assure' && plan.id !== 'family-health-optima') return null;
+                      if (selectedPreset === 'specialty' && plan.id !== 'star-premier' && plan.id !== 'arogya-sanjeevani') return null;
 
                       // Highlight key values
                       const value = (plan.data as any)[metric.id];

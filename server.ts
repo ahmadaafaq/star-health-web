@@ -2,9 +2,14 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
+
 dotenv.config();
+
+// URL of the Python RAG backend
+const RAG_API_URL = process.env.RAG_API_URL || "http://localhost:8000";
 
 const app = express();
 const PORT = 3000;
@@ -32,130 +37,189 @@ if (apiKey) {
   console.log("No GEMINI_API_KEY found. Server will run with rules-based fallbacks.");
 }
 
-// Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", aiEnabled: !!ai });
+// Health check endpoint — also probes the Python RAG service
+app.get("/api/health", async (req, res) => {
+  let ragReady = false;
+  try {
+    const ragRes = await fetch(`${RAG_API_URL}/health`);
+    if (ragRes.ok) {
+      ragReady = true;
+    }
+  } catch (_) {
+    // RAG service not reachable
+  }
+  res.json({ status: "ok", aiEnabled: ragReady, ragEnabled: ragReady });
 });
 
 // Plans static data structure for matching logic
 const PLANS_DATA = [
   {
-    id: "comprehensive",
-    name: "Star Comprehensive Plus",
-    category: "Family & Individual Protection",
-    tagline: "The absolute gold standard in worry-free health cover for families.",
-    premium: 1250,
-    coverage: "5 Lakh - 1 Crore",
-    waitingPeriod: "3 Years for Pre-Existing, Immediate for Accidents",
+    id: "family-health-optima",
+    name: "Family Health Optima",
+    category: "Family Floater Plan",
+    tagline: "All-in-one family floater with automatic restoration and newborn baby cover.",
+    premium: 1199,
+    coverage: "₹5 Lakh – ₹25 Lakh",
+    waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
     claimRatio: "98.2%",
-    coPay: "No Co-Pay (Zero out-of-pocket for network hospital treatments)",
-    roomRent: "Single Private A/C Room included with absolutely no rent capping.",
+    coPay: "No Co-Pay for network hospital treatments",
+    roomRent: "Single Private Room (no capping)",
     keyBenefits: [
-      "No room rent cap - stay in comfortable single private rooms",
-      "Maternity cover up to ₹1,00,000 with newborn baby protection",
-      "Cashless claims approved across 14,000+ top Indian hospitals",
-      "Automatic restoration of sum insured up to 100% on depletion"
+      "Automatic restoration of sum insured whenever exhausted",
+      "Additional SI for road traffic accident injuries",
+      "Newborn baby covered from day 1 of birth",
+      "Loyalty bonus accumulation up to 100% of sum insured",
+      "Covers modern treatments: immunotherapy, stem cell therapy & more"
     ],
-    description: "Ideal for growing families wanting complete freedom. It covers everything from maternity, air ambulance, outpatient consultations, to modern treatments with zero room-rent cap."
+    description: "A comprehensive family floater covering adults (18–65 years) and dependent children (16 days–25 years) with ₹5L–₹25L options. Offers automatic restoration, newborn cover, 100% loyalty bonus and modern treatment support. Available in 1 or 2 year tenure."
   },
   {
-    id: "diabetes",
-    name: "Star Diabetes Safe Specialty",
-    category: "Diabetes Relief",
-    tagline: "Dedicated coverage for Diabetes patients starting from Day 1.",
-    premium: 1100,
-    coverage: "3 Lakh - 10 Lakh",
-    waitingPeriod: "Immediate coverage for diabetes complications & insulin plans",
+    id: "arogya-sanjeevani",
+    name: "Arogya Sanjeevani",
+    category: "Standard Health Plan",
+    tagline: "IRDAI's standardised policy with sum insured up to ₹2 Crore.",
+    premium: 799,
+    coverage: "₹5 Lakh – ₹2 Crore",
+    waitingPeriod: "30-day initial waiting; 36 months for Pre-Existing Diseases",
+    claimRatio: "97.5%",
+    coPay: "5% co-pay on all claims",
+    roomRent: "Up to 2% of Sum Insured per day",
+    keyBenefits: [
+      "Cumulative bonus: 5% increase per claim-free year (max 50%)",
+      "AYUSH treatments fully covered up to sum insured",
+      "All day-care procedures covered",
+      "Cataract: up to 25% of SI or ₹40,000 per eye (whichever is lower)",
+      "ICU charges: up to 5% of SI per day (max ₹10,000/day)"
+    ],
+    description: "IRDAI's standard health policy offering wide coverage from ₹5L to ₹2Cr for individuals up to 65 years. Earns cumulative bonus every claim-free year, covers AYUSH, day-care, cataract and ICU expenses at reasonable premiums."
+  },
+  {
+    id: "medi-classic",
+    name: "Medi Classic (Individual)",
+    category: "Individual Health Plan",
+    tagline: "Classic individual health plan with lifelong renewal and long-term premium discounts.",
+    premium: 899,
+    coverage: "₹5 Lakh – ₹15 Lakh",
+    waitingPeriod: "30-day initial waiting; 36 months for Pre-Existing Diseases",
     claimRatio: "97.8%",
-    coPay: "10% Co-Pay optional for lower premium",
-    roomRent: "Private Room covered up to ₹5,000/day",
+    coPay: "No Co-Pay",
+    roomRent: "Single Private Room",
     keyBenefits: [
-      "Zero waiting period for treatments related to Diabetes Safe clauses",
-      "Covers insulin pumps, glucose monitoring, and clinical regular diagnostic visits",
-      "Covers serious diabetic complications (cardiac, renal, ophthalmic, retinopathy)",
-      "Wellness rewards & cashback up to 25% on maintaining normal HbA1c levels"
+      "Pre-hospitalization expenses: up to 30 days before admission",
+      "Post-hospitalization expenses: up to 60 days after discharge",
+      "Road ambulance: ₹750 per hospitalisation",
+      "Long-term discount: 10% on 2nd year premium, 12.5% on 3rd year",
+      "Instalment facility: monthly, quarterly or half-yearly payments"
     ],
-    description: "Designed for individuals living with Type 1 or Type 2 Diabetes. Skip the standard 3-4 year pre-existing waiting period; get specialized covers and regular health check-ups from day 1."
+    description: "An individual indemnity plan with ₹5L–₹15L coverage and lifelong renewability. Covers pre and post hospitalisation expenses, ambulance charges, and offers significant discounts for multi-year commitments with flexible payment instalments."
   },
   {
-    id: "assure",
-    name: "Star Senior Citizens Red Carpet",
-    category: "Senior Citizen Care",
-    tagline: "Eldercare security designed specifically for parents and grandparents (60-75).",
-    premium: 1850,
-    coverage: "5 Lakh - 25 Lakh",
-    waitingPeriod: "1 Year for specified pre-existing diseases",
-    claimRatio: "96.5%",
-    coPay: "No pre-insurance check-up required, 30% co-pay on claims",
-    roomRent: "Single Private Room covered up to ₹6,000 per day",
+    id: "star-assure",
+    name: "Star Health Assure",
+    category: "Comprehensive Floater Plan",
+    tagline: "Unlimited restoration, wellness rewards up to 20% discount — for up to 9 family members.",
+    premium: 1499,
+    coverage: "₹5 Lakh – ₹2 Crore",
+    waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
+    claimRatio: "98.0%",
+    coPay: "No Co-Pay",
+    roomRent: "Single Private Room (no capping)",
     keyBenefits: [
-      "No medical tests needed before buying this policy",
-      "Covers standard joint replacements, cataracts, and cardiac emergency treatments",
-      "Subsidized outpatient specialist consultations and home physiotherapy support",
-      "14,000+ network diagnostic & hospital partners with 2-hour cashless exit"
+      "Unlimited automatic restoration of sum insured in a policy year",
+      "Wellness discount up to 20% on premium for healthy lifestyle",
+      "Up to 9 family members covered under one floater",
+      "40% floater discount when 2 adults are covered together",
+      "5% early entry discount for insured aged ≤45 years at first purchase"
     ],
-    description: "Specifically created for senior parents. Avoid pre-policy screening complications while securing access to pre-existing coverages after just 12 months with pre-defined co-payment structures."
+    description: "A comprehensive plan for adults (18–75 years) and dependent children (16 days–25 years) offering ₹5L to ₹2Cr coverage. Unique for its unlimited restoration, wellness discount, early entry benefit and 1/2/3 year tenure options."
   },
   {
-    id: "family-delite",
-    name: "Star Family Delite Budget",
-    category: "Affordable Family Shield",
-    tagline: "Smart health cover for young families looking for optimal cost protection.",
-    premium: 650,
-    coverage: "3 Lakh - 15 Lakh",
-    waitingPeriod: "4 Years for Pre-Existing, Immediate for Accidents",
-    claimRatio: "97.4%",
-    coPay: "No co-pay unless chosen by the policyholder",
-    roomRent: "Shared Room / Private Room capped at 1% of Sum Insured daily",
+    id: "star-premier",
+    name: "Star Health Premier",
+    category: "Premium Wellness Plan",
+    tagline: "Wellness-integrated plan for 50+ with home care, AYUSH & modern treatment cover.",
+    premium: 1899,
+    coverage: "₹10 Lakh – ₹1 Crore",
+    waitingPeriod: "36 months for Pre-Existing Diseases",
+    claimRatio: "98.5%",
+    coPay: "No Co-Pay",
+    roomRent: "Single Private Room (no capping)",
     keyBenefits: [
-      "Most economical health shield targeting younger couples and kids",
-      "Pre and post hospitalization costs covered up to 60 days",
-      "No Claim Bonus raises your sum insured by 20% every claim-free year",
-      "Covers alternative AYUSH treatments (Ayurvedic, Homeopathy, Unani)"
+      "Designed for individuals aged 50+ with no upper age limit",
+      "No pre-acceptance medical screening required",
+      "Home care treatment and AYUSH treatment fully covered",
+      "Modern treatments including stem cell therapy & immunotherapy",
+      "Wellness points program: earn discounts through healthy activities"
     ],
-    description: "An incredibly budget-friendly policy for young working professionals and parents looking for reliable security without high premiums. Covers all essentials, day-care, and standard single-room stays."
+    description: "A premium indemnity plan for individuals aged 50 and above with sum insured options from ₹10L to ₹1Cr. No pre-policy medical tests, covers home care, AYUSH, modern treatments and a wellness rewards program for premium discounts."
   },
   {
-    id: "critical",
-    name: "Star Critical Illness Multipay",
-    category: "Lumpsum Protection",
-    tagline: "Instant single lumpsum payout on diagnosis of 37 critical conditions.",
-    premium: 450,
-    coverage: "5 Lakh - 50 Lakh",
-    waitingPeriod: "90 Days initial waiting period",
+    id: "young-star",
+    name: "Young Star Insurance",
+    category: "Plan for Young Individuals",
+    tagline: "Unlimited restoration and wellness rewards tailored for young adults and families.",
+    premium: 699,
+    coverage: "₹5 Lakh – ₹1 Crore",
+    waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
+    claimRatio: "97.6%",
+    coPay: "No Co-Pay",
+    roomRent: "Single Private Room",
+    keyBenefits: [
+      "Available on individual and floater basis (Silver & Gold plans)",
+      "Unlimited automatic restoration of sum insured in a policy year",
+      "Wellness discount up to 20% on premium",
+      "Up to 9 family members under family floater",
+      "Covers day-care treatments, in-patient and nursing expenses"
+    ],
+    description: "Specifically designed for young adults and families (up to 75 years; children from 91 days). Offers unlimited sum insured restoration, wellness discounts up to 20%, and up to 9 family members under one floater in Silver or Gold variants."
+  },
+  {
+    id: "super-star",
+    name: "Super Star",
+    category: "Super-Comprehensive Plan",
+    tagline: "Star Health's most comprehensive plan — top-tier coverage with no compromises.",
+    premium: 2299,
+    coverage: "₹5 Lakh – ₹5 Crore",
+    waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
     claimRatio: "98.8%",
-    coPay: "Zero Co-Pay (Direct Cash Lumpsum payout)",
-    roomRent: "Not applicable (Direct transfer to bank account)",
+    coPay: "No Co-Pay",
+    roomRent: "Single Private Room (no capping)",
     keyBenefits: [
-      "Instant lumpsum payout upon first-ever diagnosis of Cancer, Heart Attack, Stroke, etc.",
-      "Ensures non-medical needs, home loans, educational costs, or international search is secured",
-      "Multi-Pay: Payouts for multiple unrelated critical conditions in a lifetime",
-      "Income tax exemption benefits under Section 80D"
+      "Widest sum insured range — up to ₹5 Crore coverage",
+      "AYUSH and modern advanced treatment fully covered",
+      "Home care and day-care treatments covered",
+      "Unlimited restoration of sum insured",
+      "All day-care procedures and modern surgical interventions"
     ],
-    description: "A vital layer of supplement insurance. Instead of paying actual bills, you get a tax-free single cash drop to use however you wish on recovery, alternative treatments, travel, or paying family debt."
+    description: "Star Health's flagship super-comprehensive plan offering the broadest coverage range. No compromises on room rent, modern treatments, restoration or AYUSH. Ideal for individuals and families seeking the absolute best health protection."
   }
 ];
 
 // Helper rules engine to fall back on or supplement AI
 function rulesBasedRecommend(profile: any) {
-  const isDiabetes = profile.diabetes === true || String(profile.preExisting || "").toLowerCase().includes("diabet");
-  const hasSenior = profile.members?.includes("parents") || Number(profile.age) >= 60;
+  const hasSenior = profile.members?.includes("parents") || Number(profile.age) >= 50;
+  const isYoung = Number(profile.age) < 36;
   const isBudget = profile.budget === "modest" || profile.budget === "low";
   const hasPregnancy = profile.pregnancyPlan === true;
 
-  if (isDiabetes) {
-    return { plan: PLANS_DATA[1], savings: "₹1,85,000", cashlessCount: "13,800+" };
-  }
-  if (hasSenior && Number(profile.age) >= 60) {
-    return { plan: PLANS_DATA[2], savings: "₹3,40,000", cashlessCount: "12,900+" };
+  if (hasSenior) {
+    const plan = PLANS_DATA.find(p => p.id === "star-premier") || PLANS_DATA[4];
+    return { plan, savings: "₹3,40,000", cashlessCount: "13,900+" };
   }
   if (hasPregnancy) {
-    return { plan: PLANS_DATA[0], savings: "₹2,60,000", cashlessCount: "14,200+" };
+    const plan = PLANS_DATA.find(p => p.id === "family-health-optima") || PLANS_DATA[0];
+    return { plan, savings: "₹2,60,000", cashlessCount: "14,200+" };
+  }
+  if (isYoung && !profile.members?.includes("parents")) {
+    const plan = PLANS_DATA.find(p => p.id === "young-star") || PLANS_DATA[5];
+    return { plan, savings: "₹1,80,000", cashlessCount: "14,000+" };
   }
   if (isBudget) {
-    return { plan: PLANS_DATA[3], savings: "₹1,20,000", cashlessCount: "11,500+" };
+    const plan = PLANS_DATA.find(p => p.id === "arogya-sanjeevani") || PLANS_DATA[1];
+    return { plan, savings: "₹1,20,000", cashlessCount: "12,500+" };
   }
-  return { plan: PLANS_DATA[0], savings: "₹2,60,000", cashlessCount: "14,200+" };
+  const plan = PLANS_DATA.find(p => p.id === "star-assure") || PLANS_DATA[3];
+  return { plan, savings: "₹2,60,000", cashlessCount: "14,200+" };
 }
 
 // Interactive Advisor recommendation API
@@ -244,66 +308,302 @@ app.post("/api/recommend", async (req, res) => {
   }
 });
 
-// Assistant Floating Chat API (ChatGPT like)
+// Assistant Floating Chat API — proxies to Python RAG backend
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages } = req.body; // Array of { role: 'user' | 'model', message: string }
-    console.log("Chat assistant request received. Number of local history items:", messages?.length);
+    const { messages } = req.body; // Array of { role: 'user' | 'assistant', content: string }
+    console.log("Chat request received. Messages in history:", messages?.length);
 
     if (!messages || messages.length === 0) {
       return res.status(400).json({ error: "Messages history is required." });
     }
 
-    // Default expert advice fallback if AI is down
-    let replyText = "I'm currently optimizing my response systems. Regarding Star Health Insurance, our Star Comprehensive Plus is an exceptional premium choice covering all cashless charges, maternity, and single-room costs without capping. Diabetes patients can enroll directly in the Star Diabetes Safe Specialty with immediate day-1 security cover. How can I help you check nearby hospital rates or cashless processing today?";
+    // Forward to the Python RAG API
+    const ragResponse = await fetch(`${RAG_API_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    });
+
+    if (!ragResponse.ok) {
+      const errText = await ragResponse.text();
+      console.error("RAG API responded with error:", ragResponse.status, errText);
+      throw new Error(`RAG API error: ${ragResponse.status}`);
+    }
+
+    const data = await ragResponse.json() as { message: string };
+    console.log("RAG answer received, length:", data.message?.length);
+    res.json({ message: data.message });
+
+  } catch (error) {
+    console.error("Chat proxy error — RAG service may be down:", error);
+    res.json({
+      message:
+        "I'm having trouble reaching the knowledge base right now. Please ensure the Star Health RAG API is running (`python api.py` in the star-health-rag folder). Meanwhile, feel free to explore our plans or use the advisor wizard above!",
+    });
+  }
+});
+
+// Supabase Lead Management Integration
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://efsgbittghkwjoklhqfk.supabase.co";
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_sVxAizYJoQGhe_ysQYvIBQ_EXqB0Xpj";
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// API to submit a new lead and run AI conversion ranking
+app.post("/api/submit-lead", async (req, res) => {
+  try {
+    const lead = req.body;
+    console.log("Processing lead submission for:", lead.name);
+
+    // Compute AI Conversion Score (0-100), Classification ('hot'|'warm'|'cold'), and explanation
+    let aiScore = 70;
+    let aiType = "warm";
+    let aiExplanation = "Lead shows standard interest, recommended plan selected.";
 
     if (ai) {
       try {
-        // Construct chat context or send the whole conversation history
-        const systemInstruction = `
-          You are "Star AI", a world-class, premium, friendly health advisor representing Star Health Insurance India.
-          Your tone is empathetic, clear, highly professional, warm, and trustworthy (like an Apple or Stripe design vibe).
-          You use simple plain-English to explain complex insurance jargon.
-          
-          Our health plans are:
-          1. Star Comprehensive Plus (Monthly sum equivalent to ₹1250 - covers complete maternity up to ₹1L, single A/C private room, no rent cap, cashless across 14,000+ centers, automatic 100% sum insured restoration).
-          2. Star Diabetes Safe Speciality (Monthly sum: ₹1100 - immediate coverage for direct diabetes complications, glucose monitors, HbA1c clinics with wellness payouts, skip 3 years wait).
-          3. Star Senior Citizens Red Carpet (Monthly sum: ₹1850 - tailored for parents 60+, quick 1-year wait on standard conditions, covers knee replacement/cataract, zero pre-insurance checkups required).
-          4. Star Family Delite (Monthly sum: ₹650 - high savings, smart choice for young startup couples, shared rooms, basic surgical/AYUSH covers).
-          5. Star Critical Illness Multipay (Monthly sum: ₹450 - direct cash payout on 37 critical ailments like cancer/strokes, no bills needed).
+        const prompt = `
+          You are an expert health insurance lead conversion analyst.
+          Analyze this customer onboarding profile:
+          - Name: ${lead.name}
+          - Age: ${lead.age}
+          - Members: ${lead.members?.join(", ") || "Self"}
+          - City: ${lead.city || "Not specified"}
+          - Budget: ${lead.budget || "Not specified"}
+          - Pre-existing Diseases: ${lead.preExistingDiseases?.join(", ") || "None"}
+          - Has Diabetes: ${lead.diabetes ? "Yes" : "No"}
+          - Parents Included: ${lead.parentsIncluded ? "Yes" : "No"}
+          - Employer Insurance: ${lead.employerInsurance ? "Yes" : "No"}
+          - Pregnancy Plan: ${lead.pregnancyPlan ? "Yes" : "No"}
+          - Preferred Hospital: ${lead.preferredHospital || "None"}
+          - Recommended Plan ID: ${lead.recommendedPlanId || "None"}
 
-          Keep your answers concise, reassuring, and conversion-focused. Gently guide users to use our customized Onboarding Wizard ("Find My Best Plan") or use our "Premium Calculator" to calculate exact rates.
-          Answer general queries about waiting periods, diabetes coverage, cashless claim approval (2 hours target!), and how cashless is better than reimbursement.
+          Evaluate their likelihood to purchase a plan on a scale of 0 to 100.
+          Determine lead category:
+          - 'hot' (Score >= 80): High intent, e.g., planning pregnancy, including elderly parents, no employer coverage, or specific hospital needs.
+          - 'warm' (Score 40-79): Moderate intent, e.g., has employer coverage (lower urgency) or budget constraints but active interest.
+          - 'cold' (Score < 40): Low intent, e.g., minimal details filled, or very low budget.
+
+          Return EXACTLY this JSON structure, with no markdown formatting:
+          {
+            "score": 85,
+            "type": "hot",
+            "rationale": "Explanation of the score based on their profile metrics."
+          }
         `;
-
-        // Format history according to Gemini Content object structure
-        // Or create chats directly
-        const formattedContents = messages.map((m: any) => ({
-          role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content || m.message || "" }]
-        }));
-
         const response = await ai.models.generateContent({
           model: "gemini-3.5-flash",
-          contents: formattedContents,
+          contents: prompt,
           config: {
-            systemInstruction: systemInstruction,
-            temperature: 0.7,
+            responseMimeType: "application/json"
           }
         });
-
-        replyText = response.text || replyText;
-      } catch (geminiError) {
-        console.error("Gemini chat invocation failed, returning standard expert advisor response:", geminiError);
+        const rawText = response.text ? response.text.trim() : "";
+        console.log("Gemini Lead Scorer Output:", rawText);
+        const aiRank = JSON.parse(rawText);
+        aiScore = aiRank.score ?? aiScore;
+        aiType = aiRank.type ?? aiType;
+        aiExplanation = aiRank.rationale ?? aiExplanation;
+      } catch (e) {
+        console.error("Gemini lead scorer failed, using rules-based fallback:", e);
+        // Rules-based fallback
+        let score = 60;
+        if (lead.pregnancyPlan) score += 15;
+        if (lead.parentsIncluded) score += 10;
+        if (lead.employerInsurance) score -= 20;
+        if (lead.preExistingDiseases && lead.preExistingDiseases.length > 0) score += 5;
+        if (lead.preferredHospital) score += 10;
+        if (score > 100) score = 100;
+        if (score < 0) score = 0;
+        
+        aiScore = score;
+        aiType = score >= 80 ? "hot" : score < 40 ? "cold" : "warm";
+        aiExplanation = `Rules-based assessment: Intent is ${aiType} because of family coverage setup and ${lead.employerInsurance ? 'existing corporate cover' : 'no active corporate cover'}.`;
       }
+    } else {
+      // Rules-based score when Gemini is not configured
+      let score = 60;
+      if (lead.pregnancyPlan) score += 15;
+      if (lead.parentsIncluded) score += 10;
+      if (lead.employerInsurance) score -= 20;
+      if (lead.preExistingDiseases && lead.preExistingDiseases.length > 0) score += 5;
+      if (lead.preferredHospital) score += 10;
+      if (score > 100) score = 100;
+      if (score < 0) score = 0;
+      
+      aiScore = score;
+      aiType = score >= 80 ? "hot" : score < 40 ? "cold" : "warm";
+      aiExplanation = `Rules-based evaluation: Conversion likelihood scored ${score} based on age, family size, and employer backup status.`;
     }
 
-    res.json({ message: replyText });
-  } catch (error) {
-    console.error("Chat API error:", error);
-    res.status(500).json({ error: "Failed to query chat advisor." });
+    // Insert or update lead in Supabase
+    let data, error;
+    if (lead.id) {
+      console.log("Updating existing lead in Supabase:", lead.id);
+      const response = await supabaseClient
+        .from('leads')
+        .update({
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          ai_rank_score: aiScore,
+          profile_score: aiScore,
+          ai_rank_explanation: aiExplanation,
+          lead_type: aiType
+        })
+        .eq('id', lead.id)
+        .select();
+      data = response.data;
+      error = response.error;
+    } else {
+      console.log("Inserting new lead in Supabase");
+      const response = await supabaseClient
+        .from('leads')
+        .insert([
+          {
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            age: lead.age ? parseInt(lead.age) : null,
+            members: lead.members || [],
+            city: lead.city,
+            budget: lead.budget,
+            pre_existing_diseases: lead.preExistingDiseases || [],
+            diabetes: lead.diabetes || false,
+            parents_included: lead.parentsIncluded || false,
+            employer_insurance: lead.employerInsurance || false,
+            pregnancy_plan: lead.pregnancyPlan || false,
+            preferred_hospital: lead.preferredHospital,
+            recommended_plan_id: lead.recommendedPlanId,
+            ai_rank_score: aiScore,
+            profile_score: aiScore,
+            ai_rank_explanation: aiExplanation,
+            lead_type: aiType,
+            lead_status: 'open'
+          }
+        ])
+        .select();
+      data = response.data;
+      error = response.error;
+    }
+
+    if (error) {
+      console.error("Error inserting/updating lead in Supabase:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    // Trigger sending the WhatsApp welcome greeting asynchronously if phone is provided
+    const insertedLead = data[0];
+    if (insertedLead && insertedLead.phone && insertedLead.name) {
+      const targetPhone = insertedLead.phone;
+      const targetName = insertedLead.name;
+      const targetId = insertedLead.id;
+
+      // Use the plan ID from the request body as primary source (most reliable),
+      // fall back to whatever Supabase returned in the insert response
+      const planId: string = lead.recommendedPlanId || insertedLead.recommended_plan_id || "";
+
+      console.log(`Triggering WhatsApp welcome message for ${targetName} (${targetPhone}), plan: ${planId}`);
+      
+      // Make asynchronous request to Python backend
+      fetch(`${RAG_API_URL}/send-welcome`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: targetPhone,
+          name: targetName,
+          lead_id: targetId,
+          recommended_plan_id: planId || null
+        })
+      }).then(async (response) => {
+        if (response.ok) {
+          const resJson = await response.json();
+          console.log(`Welcome message response status:`, resJson);
+        } else {
+          console.error(`Failed to send welcome message:`, response.statusText);
+        }
+      }).catch((err) => {
+        console.error("Error calling send-welcome endpoint:", err);
+      });
+    }
+
+    res.json({ success: true, lead: data[0] });
+  } catch (error: any) {
+    console.error("Lead submission endpoint error:", error);
+    res.status(500).json({ error: "Could not submit lead" });
   }
 });
+
+// API to fetch all leads (for Kanban admin dashboard)
+app.get("/api/leads", async (req, res) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching leads from Supabase:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error("Fetch leads endpoint error:", error);
+    res.status(500).json({ error: "Could not fetch leads" });
+  }
+});
+
+// API to update lead lifecycle status
+app.patch("/api/update-lead-status", async (req, res) => {
+  try {
+    const { id, lead_status } = req.body;
+    console.log(`Updating lead ${id} status to ${lead_status}`);
+
+    const { data, error } = await supabaseClient
+      .from('leads')
+      .update({ lead_status })
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      console.error("Error updating lead status in Supabase:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ success: true, lead: data[0] });
+  } catch (error) {
+    console.error("Update lead status endpoint error:", error);
+    res.status(500).json({ error: "Could not update lead status" });
+  }
+});
+
+// Proxy call summary score updates to the Python backend
+app.post("/api/update-score-from-call", async (req, res) => {
+  try {
+    const { lead_id, call_summary } = req.body;
+    console.log(`Forwarding call summary update for lead ${lead_id} to Python API`);
+
+    const response = await fetch(`${RAG_API_URL}/api/update-score-from-call`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lead_id, call_summary })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Python API responded with error:", response.status, errText);
+      return res.status(response.status).json({ error: errText });
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    console.error("Proxy call summary error:", error);
+    res.status(500).json({ error: "Failed to communicate with RAG API server" });
+  }
+});
+
 
 // Setup Vite Dev server or Serve static files
 async function startServer() {

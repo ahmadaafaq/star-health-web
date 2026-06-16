@@ -37,11 +37,11 @@ export default function Footer() {
           <div className="text-left space-y-3">
             <h4 className="font-extrabold text-xs text-[#00338D] uppercase tracking-wider">Products</h4>
             <ul className="space-y-2 text-xs text-slate-500 font-bold">
-              <li><a href="#discovery-section" className="hover:text-star-red transition">Star Comprehensive Plus</a></li>
-              <li><a href="#discovery-section" className="hover:text-star-red transition">Star Diabetes Safe Specialty</a></li>
-              <li><a href="#discovery-section" className="hover:text-star-red transition">Senior Citizen Red Carpet</a></li>
-              <li><a href="#discovery-section" className="hover:text-star-red transition">Star Family Delite Budget</a></li>
-              <li><a href="#discovery-section" className="hover:text-star-red transition">Critical Illness Multipay</a></li>
+              <li><a href="#discovery-section" className="hover:text-star-red transition">Family Health Optima</a></li>
+              <li><a href="#discovery-section" className="hover:text-star-red transition">Star Health Assure</a></li>
+              <li><a href="#discovery-section" className="hover:text-star-red transition">Star Health Premier</a></li>
+              <li><a href="#discovery-section" className="hover:text-star-red transition">Young Star Insurance</a></li>
+              <li><a href="#discovery-section" className="hover:text-star-red transition">Arogya Sanjeevani</a></li>
             </ul>
           </div>
 
