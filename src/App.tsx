@@ -17,12 +17,27 @@ import TrustStats from "./components/TrustStats";
 import Testimonials from "./components/Testimonials";
 import AIFloatingChat from "./components/AIFloatingChat";
 import Footer from "./components/Footer";
+import AdminPortal from "./components/AdminPortal";
 import { Plan, RecommendationResponse } from "./types";
 
 export default function App() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(false);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState(null, "", path);
+    setCurrentPath(path);
+  };
 
   // Unified Plans List — sourced from actual Star Health policy documents
   const PLANS_DATA: Plan[] = [
@@ -165,8 +180,29 @@ export default function App() {
         "All day-care procedures and modern surgical interventions"
       ],
       description: "Star Health's flagship super-comprehensive plan offering the broadest coverage range. No compromises on room rent, modern treatments, restoration or AYUSH. Ideal for individuals and families seeking the absolute best health protection."
+    },
+    {
+      id: "star-comprehensive",
+      name: "Star Comprehensive Insurance Policy",
+      category: "All-Round Individual & Floater",
+      tagline: "OPD cover, maternity benefit, worldwide emergency cover — complete protection in one plan.",
+      premium: 1099,
+      coverage: "₹5 Lakh – ₹1 Crore",
+      waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
+      claimRatio: "98.1%",
+      coPay: "No Co-Pay",
+      roomRent: "Single Private Room (no capping)",
+      keyBenefits: [
+        "OPD consultations and pharmacy expenses covered",
+        "Maternity benefit with newborn baby cover from day 1",
+        "Worldwide emergency hospitalisation cover",
+        "Personal accident cover included in the base plan",
+        "No room rent capping — single private room without sub-limits"
+      ],
+      description: "A holistic individual and floater plan covering ₹5L to ₹1Cr. Uniquely includes OPD cover, maternity benefits, personal accident cover and worldwide emergency hospitalisation. No co-pay, no room rent capping — designed for complete, worry-free protection."
     }
   ];
+
 
   // Perform server-side check on load to verify AI pipeline is live
   useEffect(() => {
@@ -202,9 +238,18 @@ export default function App() {
     setChatOpen(true);
   };
 
+  if (currentPath === "/admin") {
+    return (
+      <AdminPortal 
+        onBackToSite={() => navigateTo("/")}
+        plans={PLANS_DATA}
+      />
+    );
+  }
+
   return (
     <div id="full-app-root" className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased text-center selection:bg-star-red selection:text-white">
-      
+
       {/* Dynamic Upper Banner with real timer values */}
       <div className="bg-star-blue text-white py-2 px-4 text-center text-[10px] uppercase tracking-widest font-extrabold relative z-50 flex justify-center items-center gap-2">
         <Flame className="w-3.5 h-3.5 text-star-red animate-pulse" />
@@ -217,7 +262,7 @@ export default function App() {
       {/* Sticky Top-level Header Navigation */}
       <header id="sticky-app-header" className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          
+
           {/* Logo Brand */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-star-blue rounded-lg flex items-center justify-center shadow-md">
@@ -232,8 +277,14 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right action item - Only keep Find My Best Plan */}
-          <div>
+          {/* Right action items */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigateTo("/admin")}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold rounded-xl text-xs transition uppercase tracking-widest cursor-pointer shadow-sm"
+            >
+              Control Room (Admin)
+            </button>
             <button
               onClick={handleStartAdvisor}
               className="px-5 py-2.5 sm:px-6 sm:py-3 bg-star-blue hover:bg-blue-900 text-white font-bold rounded-xl text-xs shadow-lg shadow-blue-900/10 transition-all uppercase tracking-widest hover:scale-[1.02] cursor-pointer"
@@ -247,33 +298,25 @@ export default function App() {
 
       {/* Main Blocks */}
       <main>
-        {/* Dynamic Warning Notification if any pre-loaded config is absent */}
-        {!aiEnabled && (
-          <div className="bg-blue-50 border-y border-blue-200 p-3.5 flex justify-center items-center gap-2 text-xs text-star-blue font-semibold">
-            <Info className="w-4 h-4 text-star-blue" />
-            <span>Star AI running on our optimized edge rules-based model. Add a valid GEMINI_API_KEY inside Settings panel to launch the LLM.</span>
-          </div>
-        )}
-
         {/* Hero Area */}
-        <Hero 
+        <Hero
           onStartAdvisor={handleStartAdvisor}
           onOpenChat={handleOpenInteractiveChat}
         />
 
         {/* AI advisor onboarding question flow */}
-        <AIAdvisor 
+        <AIAdvisor
           onRecommendationReceived={(res) => console.log("Advisor synchronized target plan", res)}
           plans={PLANS_DATA}
         />
 
         {/* Product categories grid */}
-        <ProductDiscovery 
+        <ProductDiscovery
           onSelectCategory={handleCategorySelection}
         />
 
         {/* Interactive Comparison Table */}
-        <ComparePlans 
+        <ComparePlans
           onStartAdvisor={handleStartAdvisor}
         />
 
@@ -298,7 +341,7 @@ export default function App() {
       </main>
 
       {/* Floated assistant and complete site index footer */}
-      <AIFloatingChat 
+      <AIFloatingChat
         onStartAdvisor={handleStartAdvisor}
         isOpen={chatOpen}
         onToggle={() => setChatOpen(!chatOpen)}

@@ -20,8 +20,21 @@ CREATE TABLE IF NOT EXISTS public.leads (
   recommended_plan_id TEXT,
   ai_rank_score INTEGER,
   ai_rank_explanation TEXT,
-  lead_type TEXT, -- 'hot', 'warm', 'cold'
-  lead_status TEXT DEFAULT 'open' -- 'open', 'in_progress', 'communication', 'won', 'lost'
+  lead_status TEXT DEFAULT 'new', -- 'new', 'attempting', 'no_answer', 'callback', 'connected', 'interested', 'not_interested', 'qualified', 'converted', 'junk'
+  gender TEXT CHECK (gender IN ('male', 'female', 'other')),
+  policy TEXT,
+  scheduled_call_at TIMESTAMP WITH TIME ZONE,
+  call_status TEXT DEFAULT 'pending',
+  call_completed_at TIMESTAMP WITH TIME ZONE,
+  interest_level TEXT,
+  primary_need TEXT,
+  follow_up_scheduled BOOLEAN,
+  budget_range TEXT,
+  whatsapp_consent BOOLEAN DEFAULT false,
+  conversation_id TEXT,
+  call_summary TEXT,
+  call_recording_url TEXT,
+  campaign_name TEXT DEFAULT 'Manual Import'
 );
 
 -- Enable RLS and configure policies for leads table

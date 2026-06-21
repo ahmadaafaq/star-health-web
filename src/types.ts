@@ -29,6 +29,8 @@ export interface RecommendationRequest {
   preExisting: string[];
   diabetes: boolean;
   parentsIncluded: boolean;
+  myParentsCount?: number;       // Number of primary's parents covered
+  spouseParentsCount?: number;   // Number of spouse's parents (parent-in-laws) covered
   employerInsurance: boolean;
   pregnancyPlan: boolean;
   preferredHospital?: string;

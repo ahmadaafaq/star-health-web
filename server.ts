@@ -1,10 +1,9 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-
+import Groq from "groq-sdk";
 
 dotenv.config();
 
@@ -16,26 +15,20 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Initialize Gemini SDK with telemetry header
-const apiKey = process.env.GEMINI_API_KEY;
-let ai: GoogleGenAI | null = null;
-if (apiKey) {
+// Initialize Groq client (same model as the RAG pipeline: llama-3.3-70b-versatile)
+const groqApiKey = process.env.GROQ_API_KEY;
+let groq: Groq | null = null;
+if (groqApiKey) {
   try {
-    ai = new GoogleGenAI({
-      apiKey: apiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
-    });
-    console.log("Gemini API successfully initialized on server.");
+    groq = new Groq({ apiKey: groqApiKey });
+    console.log("Groq API successfully initialized on server.");
   } catch (error) {
-    console.error("Failed to initialize Gemini API Client:", error);
+    console.error("Failed to initialize Groq API Client:", error);
   }
 } else {
-  console.log("No GEMINI_API_KEY found. Server will run with rules-based fallbacks.");
+  console.log("No GROQ_API_KEY found. Server will run with rules-based fallbacks.");
 }
+
 
 // Health check endpoint — also probes the Python RAG service
 app.get("/api/health", async (req, res) => {
@@ -192,6 +185,26 @@ const PLANS_DATA = [
       "All day-care procedures and modern surgical interventions"
     ],
     description: "Star Health's flagship super-comprehensive plan offering the broadest coverage range. No compromises on room rent, modern treatments, restoration or AYUSH. Ideal for individuals and families seeking the absolute best health protection."
+  },
+  {
+    id: "star-comprehensive",
+    name: "Star Comprehensive Insurance Policy",
+    category: "All-Round Individual & Floater",
+    tagline: "OPD cover, maternity benefit, worldwide emergency cover — complete protection in one plan.",
+    premium: 1099,
+    coverage: "₹5 Lakh – ₹1 Crore",
+    waitingPeriod: "36 months for Pre-Existing Diseases; Immediate for accidents",
+    claimRatio: "98.1%",
+    coPay: "No Co-Pay",
+    roomRent: "Single Private Room (no capping)",
+    keyBenefits: [
+      "OPD consultations and pharmacy expenses covered",
+      "Maternity benefit with newborn baby cover from day 1",
+      "Worldwide emergency hospitalisation cover",
+      "Personal accident cover included in the base plan",
+      "No room rent capping — single private room without sub-limits"
+    ],
+    description: "A holistic individual and floater plan covering ₹5L to ₹1Cr. Uniquely includes OPD cover, maternity benefits, personal accident cover and worldwide emergency hospitalisation. No co-pay, no room rent capping — designed for complete, worry-free protection."
   }
 ];
 
@@ -201,10 +214,16 @@ function rulesBasedRecommend(profile: any) {
   const isYoung = Number(profile.age) < 36;
   const isBudget = profile.budget === "modest" || profile.budget === "low";
   const hasPregnancy = profile.pregnancyPlan === true;
+  const wantsOpdOrComprehensive = profile.budget === "high" || profile.budget === "premium";
 
   if (hasSenior) {
     const plan = PLANS_DATA.find(p => p.id === "star-premier") || PLANS_DATA[4];
     return { plan, savings: "₹3,40,000", cashlessCount: "13,900+" };
+  }
+  if (hasPregnancy && wantsOpdOrComprehensive) {
+    // Star Comprehensive has OPD + maternity + worldwide cover
+    const plan = PLANS_DATA.find(p => p.id === "star-comprehensive") || PLANS_DATA[0];
+    return { plan, savings: "₹2,80,000", cashlessCount: "14,100+" };
   }
   if (hasPregnancy) {
     const plan = PLANS_DATA.find(p => p.id === "family-health-optima") || PLANS_DATA[0];
@@ -218,6 +237,7 @@ function rulesBasedRecommend(profile: any) {
     const plan = PLANS_DATA.find(p => p.id === "arogya-sanjeevani") || PLANS_DATA[1];
     return { plan, savings: "₹1,20,000", cashlessCount: "12,500+" };
   }
+  // Default: Star Assure for general family/comprehensive needs
   const plan = PLANS_DATA.find(p => p.id === "star-assure") || PLANS_DATA[3];
   return { plan, savings: "₹2,60,000", cashlessCount: "14,200+" };
 }
@@ -228,7 +248,31 @@ app.post("/api/recommend", async (req, res) => {
     const profile = req.body;
     console.log("Analyzing profile for recommendation:", profile);
 
-    // Get rules-based matched plan
+    // ── Step 1: Try RAG Python backend first ──────────────────────────────────
+    try {
+      console.log(`Calling RAG backend for structured recommendation: ${RAG_API_URL}/api/recommend_plan`);
+      const ragRes = await fetch(`${RAG_API_URL}/api/recommend_plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+        signal: AbortSignal.timeout(8000) // 8 second timeout
+      });
+
+      if (ragRes.ok) {
+        const ragData = await ragRes.json();
+        console.log("RAG recommendation returned:", ragData?.recommendedPlanId, "confidence:", ragData?.confidence);
+        // Return the RAG recommendation directly — it includes all required fields
+        return res.json(ragData);
+      } else {
+        const errText = await ragRes.text();
+        console.warn(`RAG backend returned non-OK status ${ragRes.status}: ${errText}. Falling back to local engine.`);
+      }
+    } catch (ragError: any) {
+      console.warn(`RAG backend unreachable (${ragError?.message || ragError}). Falling back to local rule engine.`);
+    }
+
+    // ── Step 2: Local rules-based fallback ────────────────────────────────────
+    console.log("Using local rules-based recommendation engine as fallback.");
     const ruleMatch = rulesBasedRecommend(profile);
     const matchedPlan = ruleMatch.plan;
 
@@ -242,52 +286,52 @@ app.post("/api/recommend", async (req, res) => {
       highlightedBenefits: matchedPlan.keyBenefits
     };
 
-    if (ai) {
+    // ── Step 3: Optionally enhance with Groq for better text ─────────────────
+    if (groq) {
       try {
-        const prompt = `
-          You are "Star AI", a premium, friendly, and expert health insurance advisor representing Star Health Brand India.
-          Analyze this user onboarding profile:
-          - Age of Primary: ${profile.age}
-          - Family Members: ${profile.members?.join(", ")}
-          - City Classification: ${profile.city}
-          - Budget Focus: ${profile.budget}
-          - Pre-existing Diseases: ${profile.preExisting?.join(", ") || "None mentioned"}
-          - Has Diabetes? ${profile.diabetes ? "Yes" : "No"}
-          - Includes Parents? ${profile.parentsIncluded ? "Yes" : "No"}
-          - Has Employer Insurance? ${profile.employerInsurance ? "Yes" : "No"}
-          - Planning pregnancy? ${profile.pregnancyPlan ? "Yes" : "No"}
-          - Preferred Hospitals: ${profile.preferredHospital || "Any cashless center"}
+        const prompt = `You are "Star AI", a premium, friendly, and expert health insurance advisor representing Star Health Brand India.
+Analyze this user onboarding profile:
+- Age of Primary: ${profile.age}
+- Family Members: ${profile.members?.join(", ")}
+- City Classification: ${profile.city}
+- Budget Focus: ${profile.budget}
+- Pre-existing Diseases: ${profile.preExisting?.join(", ") || "None mentioned"}
+- Has Diabetes? ${profile.diabetes ? "Yes" : "No"}
+- Includes Parents? ${profile.parentsIncluded ? "Yes" : "No"}
+- My Parents Covered: ${profile.myParentsCount ?? 0}
+- Spouse's Parents / Parent-in-Laws Covered: ${profile.spouseParentsCount ?? 0}
+- Has Employer Insurance? ${profile.employerInsurance ? "Yes" : "No"}
+- Planning pregnancy? ${profile.pregnancyPlan ? "Yes" : "No"}
+- Preferred Hospitals: ${profile.preferredHospital || "Any cashless center"}
 
-          The system has matched this user to the following plan template:
-          - Plan ID: ${matchedPlan.id}
-          - Plan Name: ${matchedPlan.name}
-          - Base Monthly Premium: ₹${matchedPlan.premium}
+The system has matched this user to the following plan template:
+- Plan ID: ${matchedPlan.id}
+- Plan Name: ${matchedPlan.name}
+- Base Monthly Premium: ₹${matchedPlan.premium}
 
-          Tasks:
-          1. Construct a brief, empathetic, professional explanation (under 3-4 clear sentences) explaining why this specific plan is the perfect choice for them. Mention their medical notes or budget constraint elegantly. Don't use developer jargon.
-          2. Come up with a realistic estimated Indian family hospitalization savings (e.g., "₹2,40,000" or similar based on their city and members).
-          3. List 3 specific bullet benefits customized to their profile.
+Tasks:
+1. Construct a brief, empathetic, professional explanation (under 3-4 clear sentences) explaining why this specific plan is the perfect choice for them. Mention their medical notes or budget constraint elegantly. Don't use developer jargon.
+2. Come up with a realistic estimated Indian family hospitalization savings (e.g., "₹2,40,000" or similar based on their city and members).
+3. List 3 specific bullet benefits customized to their profile.
 
-          Output your response as structured JSON matching exactly this schema:
-          {
-            "whyExplanation": "Direct, clean, highly personalized advice sentence targeting their exact profile.",
-            "savingsEstimate": "Estimated money saved on average hospitalization (format like: ₹X,XX,000)",
-            "monthlyPremium": ${matchedPlan.premium},
-            "highlightedBenefits": ["Benefit 1 custom to them", "Benefit 2 custom to them", "Benefit 3 custom to them"]
-          }
-          Ensure ONLY clean, parseable JSON is returned. Do not wraps it in markdown code blocks, return raw text.
-        `;
+Return ONLY a raw JSON object (no markdown), exactly:
+{
+  "whyExplanation": "...",
+  "savingsEstimate": "₹X,XX,000",
+  "monthlyPremium": ${matchedPlan.premium},
+  "highlightedBenefits": ["Benefit 1", "Benefit 2", "Benefit 3"]
+}`;
 
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json"
-          }
+        const response = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.3,
+          max_tokens: 800,
+          response_format: { type: "json_object" }
         });
 
-        const rawText = response.text ? response.text.trim() : "";
-        console.log("Raw Gemini Advisor JSON Output:", rawText);
+        const rawText = response.choices[0].message.content?.trim() || "";
+        console.log("Groq Advisor JSON Output:", rawText);
 
         const aiResponse = JSON.parse(rawText);
         responseJson = {
@@ -296,8 +340,8 @@ app.post("/api/recommend", async (req, res) => {
           savingsEstimate: aiResponse.savingsEstimate || responseJson.savingsEstimate,
           highlightedBenefits: aiResponse.highlightedBenefits || responseJson.highlightedBenefits,
         };
-      } catch (geminiError) {
-        console.error("Gemini advisor call failed, preceding with default rule recommendation:", geminiError);
+      } catch (groqError) {
+        console.error("Groq advisor call failed, using rule-based recommendation text:", groqError);
       }
     }
 
@@ -307,6 +351,8 @@ app.post("/api/recommend", async (req, res) => {
     res.status(500).json({ error: "Could not generate insurance advice" });
   }
 });
+
+
 
 // Assistant Floating Chat API — proxies to Python RAG backend
 app.post("/api/chat", async (req, res) => {
@@ -360,52 +406,52 @@ app.post("/api/submit-lead", async (req, res) => {
     let aiType = "warm";
     let aiExplanation = "Lead shows standard interest, recommended plan selected.";
 
-    if (ai) {
+    if (groq) {
       try {
-        const prompt = `
-          You are an expert health insurance lead conversion analyst.
-          Analyze this customer onboarding profile:
-          - Name: ${lead.name}
-          - Age: ${lead.age}
-          - Members: ${lead.members?.join(", ") || "Self"}
-          - City: ${lead.city || "Not specified"}
-          - Budget: ${lead.budget || "Not specified"}
-          - Pre-existing Diseases: ${lead.preExistingDiseases?.join(", ") || "None"}
-          - Has Diabetes: ${lead.diabetes ? "Yes" : "No"}
-          - Parents Included: ${lead.parentsIncluded ? "Yes" : "No"}
-          - Employer Insurance: ${lead.employerInsurance ? "Yes" : "No"}
-          - Pregnancy Plan: ${lead.pregnancyPlan ? "Yes" : "No"}
-          - Preferred Hospital: ${lead.preferredHospital || "None"}
-          - Recommended Plan ID: ${lead.recommendedPlanId || "None"}
+        const prompt = `You are an expert health insurance lead conversion analyst.
+Analyze this customer onboarding profile:
+- Name: ${lead.name}
+- Age: ${lead.age}
+- Members: ${lead.members?.join(", ") || "Self"}
+- City: ${lead.city || "Not specified"}
+- Budget: ${lead.budget || "Not specified"}
+- Pre-existing Diseases: ${lead.preExistingDiseases?.join(", ") || "None"}
+- Has Diabetes: ${lead.diabetes ? "Yes" : "No"}
+- Parents Included: ${lead.parentsIncluded ? "Yes" : "No"}
+- My Parents Covered: ${lead.myParentsCount ?? 0}
+- Spouse's Parents / Parent-in-Laws Covered: ${lead.spouseParentsCount ?? 0}
+- Employer Insurance: ${lead.employerInsurance ? "Yes" : "No"}
+- Pregnancy Plan: ${lead.pregnancyPlan ? "Yes" : "No"}
+- Preferred Hospital: ${lead.preferredHospital || "None"}
+- Recommended Plan ID: ${lead.recommendedPlanId || "None"}
 
-          Evaluate their likelihood to purchase a plan on a scale of 0 to 100.
-          Determine lead category:
-          - 'hot' (Score >= 80): High intent, e.g., planning pregnancy, including elderly parents, no employer coverage, or specific hospital needs.
-          - 'warm' (Score 40-79): Moderate intent, e.g., has employer coverage (lower urgency) or budget constraints but active interest.
-          - 'cold' (Score < 40): Low intent, e.g., minimal details filled, or very low budget.
+Evaluate their likelihood to purchase a plan on a scale of 0 to 100.
+Determine lead category:
+- 'hot' (Score >= 80): High intent, e.g., planning pregnancy, including elderly parents, no employer coverage, or specific hospital needs.
+- 'warm' (Score 40-79): Moderate intent, e.g., has employer coverage (lower urgency) or budget constraints but active interest.
+- 'cold' (Score < 40): Low intent, e.g., minimal details filled, or very low budget.
 
-          Return EXACTLY this JSON structure, with no markdown formatting:
-          {
-            "score": 85,
-            "type": "hot",
-            "rationale": "Explanation of the score based on their profile metrics."
-          }
-        `;
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json"
-          }
+Return ONLY a raw JSON object (no markdown):
+{
+  "score": 85,
+  "type": "hot",
+  "rationale": "Explanation of the score based on their profile metrics."
+}`;
+        const response = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.3,
+          max_tokens: 400,
+          response_format: { type: "json_object" }
         });
-        const rawText = response.text ? response.text.trim() : "";
-        console.log("Gemini Lead Scorer Output:", rawText);
+        const rawText = response.choices[0].message.content?.trim() || "";
+        console.log("Groq Lead Scorer Output:", rawText);
         const aiRank = JSON.parse(rawText);
         aiScore = aiRank.score ?? aiScore;
         aiType = aiRank.type ?? aiType;
         aiExplanation = aiRank.rationale ?? aiExplanation;
       } catch (e) {
-        console.error("Gemini lead scorer failed, using rules-based fallback:", e);
+        console.error("Groq lead scorer failed, using rules-based fallback:", e);
         // Rules-based fallback
         let score = 60;
         if (lead.pregnancyPlan) score += 15;
@@ -421,7 +467,7 @@ app.post("/api/submit-lead", async (req, res) => {
         aiExplanation = `Rules-based assessment: Intent is ${aiType} because of family coverage setup and ${lead.employerInsurance ? 'existing corporate cover' : 'no active corporate cover'}.`;
       }
     } else {
-      // Rules-based score when Gemini is not configured
+      // Rules-based score when Groq is not configured
       let score = 60;
       if (lead.pregnancyPlan) score += 15;
       if (lead.parentsIncluded) score += 10;
@@ -446,6 +492,10 @@ app.post("/api/submit-lead", async (req, res) => {
           name: lead.name,
           email: lead.email,
           phone: lead.phone,
+          gender: lead.gender || null,
+          whatsapp_consent: lead.whatsapp_consent || false,
+          scheduled_call_at: lead.scheduledCallAt ? new Date(lead.scheduledCallAt).toISOString() : null,
+          call_status: lead.scheduledCallAt ? 'scheduled' : undefined,
           ai_rank_score: aiScore,
           profile_score: aiScore,
           ai_rank_explanation: aiExplanation,
@@ -464,6 +514,9 @@ app.post("/api/submit-lead", async (req, res) => {
             name: lead.name,
             email: lead.email,
             phone: lead.phone,
+            gender: lead.gender || null,
+            whatsapp_consent: lead.whatsapp_consent || false,
+            scheduled_call_at: lead.scheduledCallAt ? new Date(lead.scheduledCallAt).toISOString() : null,
             age: lead.age ? parseInt(lead.age) : null,
             members: lead.members || [],
             city: lead.city,
@@ -479,7 +532,7 @@ app.post("/api/submit-lead", async (req, res) => {
             profile_score: aiScore,
             ai_rank_explanation: aiExplanation,
             lead_type: aiType,
-            lead_status: 'open'
+            lead_status: lead.scheduledCallAt ? 'callback' : 'new'
           }
         ])
         .select();
@@ -494,7 +547,7 @@ app.post("/api/submit-lead", async (req, res) => {
 
     // Trigger sending the WhatsApp welcome greeting asynchronously if phone is provided
     const insertedLead = data[0];
-    if (insertedLead && insertedLead.phone && insertedLead.name) {
+    if (insertedLead && insertedLead.phone && insertedLead.name && insertedLead.whatsapp_consent) {
       const targetPhone = insertedLead.phone;
       const targetName = insertedLead.name;
       const targetId = insertedLead.id;
@@ -534,6 +587,106 @@ app.post("/api/submit-lead", async (req, res) => {
   }
 });
 
+// Endpoint to explicitly send policy details via WhatsApp
+app.post("/api/send-whatsapp", async (req, res) => {
+  try {
+    const { lead_id, phone, name, recommended_plan_id } = req.body;
+    if (!phone || !name) {
+      return res.status(400).json({ error: "Missing phone or name" });
+    }
+
+    // Optionally update the DB status to indicate it was sent
+    await supabaseClient
+      .from('leads')
+      .update({ whatsapp_consent: true })
+      .eq('id', lead_id);
+
+    // Make asynchronous request to Python backend
+    const response = await fetch(`${RAG_API_URL}/send-welcome`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: phone,
+        name: name,
+        lead_id: lead_id,
+        recommended_plan_id: recommended_plan_id || null
+      })
+    });
+
+    if (response.ok) {
+      res.json({ success: true, message: "WhatsApp message triggered" });
+    } else {
+      res.status(500).json({ error: "Failed to send WhatsApp message" });
+    }
+  } catch (error: any) {
+    console.error("Send WhatsApp endpoint error:", error);
+    res.status(500).json({ error: "Could not trigger WhatsApp message" });
+  }
+});
+
+// Endpoint to request a secure signed URL from ElevenLabs for browser VOIP calls
+app.get("/api/signed-url", async (req, res) => {
+  try {
+    const agentId = process.env.ELEVENLABS_AGENT_ID || "agent_9101kvjj8g1cecatsrr130tgv6rn";
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+
+    // Check if the developer API key is not configured, or is the default invalid key
+    if (!apiKey || apiKey === "cc4abdcf882f697f4c7ec8c991e863d626c6b0f55033c466abcc39d8ba753535" || apiKey.trim() === "" || req.query.public === "true") {
+      console.log(`[ElevenLabs] API key is missing, invalid, or client requested public access. Directing client to connect directly to public agent: ${agentId}`);
+      return res.json({ usePublicAgent: true, agentId });
+    }
+
+    console.log("Requesting ElevenLabs signed URL for agent:", agentId);
+
+    const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${agentId}`, {
+      method: "GET",
+      headers: {
+        "xi-api-key": apiKey
+      }
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("ElevenLabs signed URL error:", response.status, errText);
+      throw new Error(`ElevenLabs API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    console.error("Signed URL endpoint error:", error);
+    res.status(500).json({ error: "Could not generate session token" });
+  }
+});
+
+// Endpoint to link conversation ID with lead ID in Supabase
+app.post("/api/register-conversation", async (req, res) => {
+  try {
+    const { leadId, conversationId } = req.body;
+    if (!leadId || !conversationId) {
+      return res.status(400).json({ error: "Missing leadId or conversationId" });
+    }
+
+    console.log(`Registering conversation ${conversationId} for lead ${leadId}`);
+
+    const { data, error } = await supabaseClient
+      .from('leads')
+      .update({ conversation_id: conversationId })
+      .eq('id', leadId)
+      .select();
+
+    if (error) {
+      console.error("Error updating lead conversation ID in Supabase:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ success: true, lead: data[0] });
+  } catch (error: any) {
+    console.error("Register conversation error:", error);
+    res.status(500).json({ error: "Could not register conversation" });
+  }
+});
+
 // API to fetch all leads (for Kanban admin dashboard)
 app.get("/api/leads", async (req, res) => {
   try {
@@ -557,12 +710,19 @@ app.get("/api/leads", async (req, res) => {
 // API to update lead lifecycle status
 app.patch("/api/update-lead-status", async (req, res) => {
   try {
-    const { id, lead_status } = req.body;
-    console.log(`Updating lead ${id} status to ${lead_status}`);
+    const { id, lead_status, call_status, scheduled_call_at } = req.body;
+    console.log(`Updating lead ${id} - lead_status: ${lead_status}, call_status: ${call_status}`);
+
+    const updateData: any = {};
+    if (lead_status) updateData.lead_status = lead_status;
+    if (call_status) updateData.call_status = call_status;
+    if (scheduled_call_at) {
+      updateData.scheduled_call_at = new Date(scheduled_call_at).toISOString();
+    }
 
     const { data, error } = await supabaseClient
       .from('leads')
-      .update({ lead_status })
+      .update(updateData)
       .eq('id', id)
       .select();
 
@@ -601,6 +761,145 @@ app.post("/api/update-score-from-call", async (req, res) => {
   } catch (error: any) {
     console.error("Proxy call summary error:", error);
     res.status(500).json({ error: "Failed to communicate with RAG API server" });
+  }
+});
+
+
+// GET WhatsApp message history for all leads (directly from Supabase)
+app.get("/api/messages", async (req, res) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching messages from Supabase:", error);
+      return res.status(500).json({ error: error.message });
+    }
+    res.json(data);
+  } catch (error) {
+    console.error("Messages list endpoint error:", error);
+    res.status(500).json({ error: "Could not fetch messages" });
+  }
+});
+
+// GET WhatsApp message history for a single phone number (from Python RAG backend)
+app.get("/api/messages/:phone", async (req, res) => {
+  try {
+    const phone = req.params.phone;
+    const response = await fetch(`${RAG_API_URL}/conversation/${encodeURIComponent(phone)}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("RAG API responded with error:", response.status, errText);
+      return res.status(response.status).json({ error: errText });
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Proxy messages error:", error);
+    res.status(500).json({ error: "Failed to communicate with RAG API server" });
+  }
+});
+
+// POST send manual WhatsApp custom reply (via Python RAG backend)
+app.post("/api/send-custom-whatsapp", async (req, res) => {
+  try {
+    const { phone, message } = req.body;
+    if (!phone || !message) {
+      return res.status(400).json({ error: "phone and message are required" });
+    }
+    console.log(`Forwarding manual WhatsApp custom reply to RAG backend for phone: ${phone}`);
+    const response = await fetch(`${RAG_API_URL}/send-reply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, message })
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("RAG API responded with error:", response.status, errText);
+      return res.status(response.status).json({ error: errText });
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Proxy send-reply error:", error);
+    res.status(500).json({ error: "Failed to communicate with RAG API server" });
+  }
+});
+
+// POST bulk import leads into Supabase
+app.post("/api/bulk-import-leads", async (req, res) => {
+  try {
+    const { leads } = req.body;
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return res.status(400).json({ error: "Leads must be a non-empty array" });
+    }
+
+    console.log(`Bulk importing ${leads.length} leads...`);
+
+    const formattedLeads = leads.map(l => ({
+      name: l.name || null,
+      phone: l.phone || null,
+      email: l.email || null,
+      age: l.age ? parseInt(l.age, 10) : null,
+      gender: l.gender || null,
+      policy: l.policy || l.recommended_plan_id || null,
+      recommended_plan_id: l.recommended_plan_id || l.policy || null,
+      city: l.city || null,
+      budget: l.budget || null,
+      pre_existing_diseases: Array.isArray(l.pre_existing_diseases) ? l.pre_existing_diseases : [],
+      campaign_name: l.campaign_name || 'Manual Import',
+      lead_status: l.lead_status || 'new',
+      call_status: l.call_status || 'pending',
+      scheduled_call_at: l.scheduled_call_at ? new Date(l.scheduled_call_at).toISOString() : null
+    }));
+
+    const { data, error } = await supabaseClient
+      .from('leads')
+      .insert(formattedLeads)
+      .select();
+
+    if (error) {
+      console.error("Error bulk inserting leads to Supabase:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ success: true, count: data.length, data });
+  } catch (error: any) {
+    console.error("Bulk import leads error:", error);
+    res.status(500).json({ error: "Could not import leads" });
+  }
+});
+
+// POST proxy trigger outbound call to the voice agent server
+app.post("/api/trigger-outbound-call", async (req, res) => {
+  try {
+    const { leadId } = req.body;
+    if (!leadId) {
+      return res.status(400).json({ error: "leadId is required" });
+    }
+
+    const voiceAgentUrl = process.env.VOICE_AGENT_URL || "http://localhost:4000";
+    console.log(`Requesting voice agent server at ${voiceAgentUrl} to call lead: ${leadId}`);
+
+    const response = await fetch(`${voiceAgentUrl}/api/voice/trigger-outbound`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leadId })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Voice agent trigger responded with error:", response.status, errText);
+      return res.status(response.status).json({ error: errText });
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    console.error("Trigger outbound call proxy error:", error);
+    res.status(500).json({ error: "Failed to connect to voice agent server" });
   }
 });
 
