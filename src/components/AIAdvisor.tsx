@@ -62,6 +62,17 @@ const LOADER_STEPS = [
   "Optimizing premium configurations for maximum savings..."
 ];
 
+// ── Compact policy catalog injected at session start (eliminates per-turn KB lookup) ──
+const STAR_HEALTH_PLANS_CONTEXT = `Star Health Insurance Plans:
+1. Arogya Sanjeevani — IRDAI standard plan. Sum insured ₹5L–₹2Cr. 5% co-pay. Cumulative bonus up to 50%. Affordable entry-level option.
+2. Family Health Optima (FHO) — Family floater. Sum insured ₹5L–₹25L. Automatic restoration. Newborn cover from day 1. Loyalty bonus up to 100%. Ideal for multi-generation families.
+3. Medi Classic (Individual) — Individual plan. Sum insured ₹5L–₹15L. No co-pay. Pre/post hospitalisation covered. Long-term discounts available. Good for single adults.
+4. Star Health Assure — Comprehensive floater for up to 9 members. Unlimited restoration. Wellness discount up to 20%. Best for large families or those wanting premium coverage.
+5. Star Health Premier — Designed for 50+ age group. No upper age limit. Home care covered. AYUSH covered. Wellness program included. Best for seniors and parents.
+6. Young Star Insurance — For young adults and families. Unlimited sum insured restoration. Wellness rewards. Silver and Gold variants. Best for young couples and individuals under 35.
+7. Super Star — Star Health flagship plan. Sum insured ₹5L–₹5Cr. No co-pay. Broadest coverage available. Best for those wanting maximum protection.
+8. Star Comprehensive — All-round plan. Sum insured ₹5L–₹1Cr. No co-pay. OPD cover. Maternity benefit. Worldwide emergency cover. No room rent cap. Best for maternity or OPD needs.`.trim();
+
 interface AIAdvisorProps {
   onRecommendationReceived: (response: RecommendationResponse) => void;
   plans: Plan[];
@@ -680,22 +691,65 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
         }
       };
 
+      // ── Build rich profile context for ElevenLabs session ──────────────────
+      // Mirrors what the Twilio outbound webhook injects, so the browser VOIP
+      // agent has the same zero-latency full-context experience.
+      const ped: string[] = [
+        ...(formData.preExisting.filter((d: string) => d !== 'none')),
+        ...(formData.diabetes && !formData.preExisting.includes('diabetes') ? ['diabetes'] : [])
+      ];
+      const preExistingConditions = ped.length > 0 ? ped.join(', ') : 'none';
+      const customerMembers = formData.members.length > 0 ? formData.members.join(', ') : 'not specified';
+      const customerProfileSummary = [
+        formData.age ? `${formData.age} years old` : '',
+        formData.members.length > 0 ? `family: ${formData.members.join(', ')}` : '',
+        formData.city || '',
+        formData.budget ? `${formData.budget} budget` : '',
+        ped.length > 0 ? `conditions: ${ped.join(', ')}` : ''
+      ].filter(Boolean).join(' | ') || 'Profile not available';
+
+      // Use the AI-generated whyExplanation from the recommendation engine as the
+      // "why this plan" context — it's already personalized to the customer's profile.
+      const whyThisPlan = recommendation?.whyExplanation
+        || `The ${policyName} was recommended based on your health profile and family requirements. It provides the right balance of coverage, premium, and benefits tailored to your situation.`;
+
       const sessionParams: any = {
         dynamicVariables: {
+          // ── Identity ────────────────────────────────────────────────────
+          name: customerName,
+          customer_name: customerName,
+          customerName: customerName,
+          user_name: customerName,
+          userName: customerName,
+          designation,
+          designationName: designation,
+          designation_name: designation,
+
+          // ── Recommended plan ────────────────────────────────────────────
           policy: policyName,
           policyName: policyName,
           policy_name: policyName,
           recommended_plan: policyName,
           recommended_policy: policyName,
           recommended_plan_name: policyName,
-          customer_name: customerName,
-          customerName: customerName,
-          name: customerName,
-          user_name: customerName,
-          userName: customerName,
-          designation: designation,
-          designationName: designation,
-          designation_name: designation
+
+          // ── Why this plan was chosen (personalized AI explanation) ───────
+          why_this_plan: whyThisPlan,
+
+          // ── Customer profile snapshot ────────────────────────────────────
+          customer_profile_summary: customerProfileSummary,
+          customer_age: formData.age || '',
+          customer_city: formData.city || '',
+          customer_budget: formData.budget || '',
+          customer_members: customerMembers,
+          has_diabetes: formData.diabetes ? 'yes' : 'no',
+          has_parents: formData.parentsIncluded ? 'yes' : 'no',
+          has_employer_insurance: formData.employerInsurance ? 'yes' : 'no',
+          needs_maternity: formData.pregnancyPlan ? 'yes' : 'no',
+          pre_existing_conditions: preExistingConditions,
+
+          // ── Full policy catalog (zero per-turn retrieval latency) ────────
+          all_plans_context: STAR_HEALTH_PLANS_CONTEXT,
         },
         clientTools: {
           sendWhatsAppDetails: async (args: any) => {
