@@ -1,0 +1,51 @@
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+    try {
+      // 1. Attempt to fetch the secure signed URL from the web backend
+      let signed_url: string | null = null;
+      try {
+        const res = await fetch("/api/signed-url");
+        if (res.ok) {
+          const data = await res.json();
+          signed_url = data.signed_url;
+        } else {
+          console.warn("Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.");
+        }
+      } catch (err) {
+        console.warn("Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:", err);
+      }
+
+      // 2. Start the ElevenLabs Conversation session
+      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
+      
+      console.log(`Starting VOIP call for policy: ${policyName}`);
+      
+      const sessionParams: any = {
+        dynamicVariables: {
+          policy: policyName
+        },
+        onConnect: async ({ conversationId }: { conversationId: string }) => {
+          console.log("VOIP call connected! Conversation ID:", conversationId);
+          setConversationId(conversationId);
+          setVoipStatus("connected");
+
+          // 3. Link the conversation ID to our database lead
+          if (submittedLeadData?.id) {
+            try {
+              await fetch("/api/register-conversation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  leadId: submittedLeadData.id,
+                  conversationId: conversationId
+                })
+              });
+            } catch (err) {
+              console.error("Failed to register conversation in database:", err);
+            }
+          }
+        },
+      

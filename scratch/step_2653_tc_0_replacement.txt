@@ -1,0 +1,1 @@
+"                                      // Update recommendation model locally to treat selected as recommended choice\n                                      const opCount = comparedPlan.id === \"star-comprehensive\" ? \"14,000+\" : \"11,500+\";\n                                      const opSavings = comparedPlan.id === \"star-comprehensive\" ? \"₹2,40,000\" : \"₹1,20,000\";"

@@ -1,0 +1,33 @@
+import json
+
+LOG_PATH = "/Users/apple/.gemini/antigravity-ide/brain/6ef877bd-c946-4e1c-9b70-1ab83097a494/.system_generated/logs/transcript.jsonl"
+
+with open(LOG_PATH, 'r', encoding='utf-8') as f:
+    for line_idx, line in enumerate(f):
+        try:
+            step = json.loads(line)
+            step_str = json.dumps(step)
+            # Find where handleSendWhatsapp is mentioned
+            if "handlesendwhatsapp" in step_str.lower() or "voipactive" in step_str.lower():
+                # We want to print tool call arguments
+                tool_calls = step.get("tool_calls", [])
+                for tc_idx, tc in enumerate(tool_calls):
+                    args = tc.get("args", {})
+                    args_str = json.dumps(args)
+                    if "handlesendwhatsapp" in args_str.lower() or "voipactive" in args_str.lower():
+                        print(f"Match in Step {step.get('step_index')} (Tool: {tc.get('name')})")
+                        # Write replacement or code content to a file to prevent truncation
+                        if "ReplacementContent" in args:
+                            out_p = f"scratch/step_{step.get('step_index')}_tc_{tc_idx}_replacement.txt"
+                            with open(out_p, "w", encoding="utf-8") as out:
+                                out.write(args["ReplacementContent"])
+                            print(f"  Wrote ReplacementContent to {out_p}")
+                        if "CodeContent" in args:
+                            out_p = f"scratch/step_{step.get('step_index')}_tc_{tc_idx}_code.txt"
+                            with open(out_p, "w", encoding="utf-8") as out:
+                                out.write(args["CodeContent"])
+                            print(f"  Wrote CodeContent to {out_p}")
+                        if "ReplacementChunks" in args:
+                            chunks = args["ReplacementChunks"]
+                            if isinstance(chunks, str):
+                            

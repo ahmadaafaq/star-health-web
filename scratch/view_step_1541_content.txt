@@ -1,0 +1,70 @@
+Created At: 2026-06-21T11:55:44Z
+Completed At: 2026-06-21T11:55:45Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx`
+Total Lines: 1923
+Total Bytes: 110148
+Showing lines 570 to 630
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+570:         console.error("Error ending VOIP session:", err);
+571:       }
+572:     }
+573:     setVoipStatus("idle");
+574:     setVoipActive(false);
+575:     setConversationInstance(null);
+576:   };
+577: 
+578:   return (
+579:     <div id="ai-advisor-section" className="py-12 lg:py-20 border-t border-slate-200 bg-blue-50/30 text-slate-900 relative">
+580:       <div className="absolute top-10 right-10 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-40 pointer-events-none" />
+581: 
+582:       <div className={`mx-auto px-4 sm:px-6 transition-all duration-500 ${recommendation ? "max-w-6xl" : "max-w-4xl"} relative`}>
+583: 
+584:         {/* Admin Toggle Button */}
+585:         <div className="flex justify-end mb-6">
+586:           <button
+587:             onClick={() => {
+588:               window.history.pushState(null, "", "/admin");
+589:               window.dispatchEvent(new PopStateEvent('popstate'));
+590:             }}
+591:             className="px-4 py-2 bg-[#00338D] text-white hover:bg-blue-900 border border-blue-800 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-md"
+592:           >
+593:             📊 Control Room (Admin)
+594:           </button>
+595:         </div>
+596: 
+597:         {/* Header Block */}
+598:         <div className="text-center space-y-4 mb-10">
+599:           <div className="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-star-red text-xs px-3.5 py-1.5 rounded-full font-bold uppercase tracking-wider">
+600:             <Activity className="w-3.5 h-3.5 
+<truncated 29 bytes>
+      <span>Star Insurance Advisor Smart Flow</span>
+602:           </div>
+603:           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+604:             Conversational Insurance Discovery
+605:           </h2>
+606:           <p className="text-slate-600 max-w-lg mx-auto text-sm leading-relaxed font-medium">
+607:             Tired of corporate jargon? Tell us who you wish to protect and Star AI will engineer the precise coverage configuration.
+608:           </p>
+609:         </div>
+610: 
+611:         {/* Wizard Card Body */}
+612:         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden min-h-[480px]">
+613: 
+614:           {/* Confetti effect when recommendation is ready */}
+615:           {recommendation && <Confetti />}
+616: 
+617:           <AnimatePresence mode="wait">
+618:             {!recommendation ? (
+619:               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+620: 
+621:                 {/* Left Column: Moral Narrative Panel */}
+622:                 <div className="lg:col-span-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden border border-slate-800 shadow-lg min-h-[300px]">
+623:                   {/* Background decoration glow */}
+624:                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
+625:                   <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+626: 
+627:                   <div className="my-auto">
+628:                     <AnimatePresence mode="wait">
+629:                       <motion.div
+630:                         key={`narration-side-${step}`}
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

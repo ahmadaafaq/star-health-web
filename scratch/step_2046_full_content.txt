@@ -1,0 +1,53 @@
+Created At: 2026-06-21T13:07:19Z
+Completed At: 2026-06-21T13:07:19Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/scratch/view_step_1505_content.txt`
+Total Lines: 54
+Total Bytes: 4121
+Showing lines 1 to 54
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: Created At: 2026-06-21T11:53:35Z
+2: Completed At: 2026-06-21T11:53:36Z
+3: File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx`
+4: Total Lines: 1853
+5: Total Bytes: 107984
+6: Showing lines 550 to 750
+7: The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+8: 550: 
+9: 551:                 {/* Left Column: Moral Narrative Panel */}
+10: 552:                 <div className="lg:col-span-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden border border-slate-800 shadow-lg min-h-[300px]">
+11: 553:                   {/* Background decoration glow */}
+12: 554:                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
+13: 555:                   <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+14: 556: 
+15: 557:                   <div className="my-auto">
+16: 558:                     <AnimatePresence mode="wait">
+17: 559:                       <motion.div
+18: 560:                         key={`narration-side-${step}`}
+19: 561:                         initial={{ opacity: 0, x: -15 }}
+20: 562:                         animate={{ opacity: 1, x: 0 }}
+21: 563:                         exit={{
+<truncated 793 bytes>
+                    ? 'bg-blue-50/80 border-star-blue text-star-blue shadow-md'
+33: 731:                             : 'bg-slate-50 border-slate-200 text-slate-705'
+34: 732:                             }`}
+35: 733:                         >
+36: 734:                           <span className="text-2xl block mb-2">👴</span>
+37: 735:                           <div className="flex justify-between items-center">
+38: 736:                             <div className="font-bold text-sm text-slate-900">Spouse's Parents</div>
+39: 737:                             <div className="flex items-center gap-2.5 bg-white border border-slate-200 px-2 py-1 rounded-xl">
+40: 738:                               <button
+41: 739:                                 type="button"
+42: 740:                                 onClick={(e) => { e.stopPropagation(); decrementSpouseParents(); }}
+43: 741:                                 disabled={spouseParentsCount === 0}
+44: 742:                                 className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-extrabold text-slate-850 flex items-center justify-center text-xs transition cursor-pointer"
+45: 743:                               >
+46: 744:                                 -
+47: 745:                               </button>
+48: 746:                               <span className="font-black text-xs text-slate-905 w-3 text-center">{spouseParentsCount}</span>
+49: 747:                               <button
+50: 748:                                 type="button"
+51: 749:                                 onClick={(e) => { e.stopPropagation(); incrementSpouseParents(); }}
+52: 750:                                 disabled={spouseParentsCount >= 2 || totalMembers >= 8}
+53: The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+54: 
+The above content shows the entire, complete file contents of the requested file.

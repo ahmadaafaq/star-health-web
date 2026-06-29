@@ -1,0 +1,81 @@
+Created At: 2026-06-21T11:59:47Z
+Completed At: 2026-06-21T11:59:48Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx`
+Total Lines: 2022
+Total Bytes: 115529
+Showing lines 288 to 360
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+288:   const runRecommendation = async () => {
+289:     // Validate required fields (Name and Phone) and consent checkbox
+290:     if (!leadForm.name.trim() || !leadForm.phone.trim() || !consentChecked) {
+291:       setShowValidationErrors(true);
+292:       return;
+293:     }
+294: 
+295:     const startTime = Date.now();
+296:     setLoading(true);
+297:     let matchedPlanId = "";
+298:     let mockData: RecommendationResponse | null = null;
+299: 
+300:     try {
+301:       const response = await fetch("/api/recommend", {
+302:         method: "POST",
+303:         headers: { "Content-Type": "application/json" },
+304:         body: JSON.stringify(formData)
+305:       });
+306:       if (response.ok) {
+307:         const data: RecommendationResponse = await response.json();
+308:         matchedPlanId = data.recommendedPlanId;
+309:         mockData = data;
+310:       } else {
+311:         throw new Error("API Recommend call failed");
+312:       }
+313:     } catch (e) {
+314:       console.warn("Falling back to client-side recommendation engine");
+315:       const hasSenior = formData.members.includes("parents") || Number(formData.age) >= 50;
+316:       const isYoung = Number(formData.age) < 36;
+317:       const isBudget = formData.budget === "low" || formData.budget === "modest";
+318:       const hasPregnancy = formData.pregnancyPlan;
+319: 
+320:       let matchPlan = plans[0];
+321:       let savings = "₹2,60,000";
+322:       let count = "14,200+";
+323: 
+324:       if (hasSenior) {
+325:         matchPlan = plans.find(p => p.id === "star-premier") || plans[0];
+326:         savings = "₹3,40,000";
+327:         count = "13,900+";
+328:       } else if (hasPregnancy) {
+329:         matchPlan = plans.find(p => p.id === "family-health-optima") || plans[0];
+330:         savings = "₹2,60,000";
+331:         count = "14,200+";
+332:       } else if (isYoung && !formData.members.includes("parents")) {
+333:         matchPlan = plans.find(p => p.id === "young-star") || plans[0];
+334:         savings = "₹1,80,000";
+335:         count = "14,000+";
+336:       } else if (isBudget) {
+337:         matchPlan = plans.find(p => p.id === "arogya-sanjeevani") || plans[0];
+338:         savings = "₹1,20,000";
+339:         count = "12,500+";
+340:       } else {
+341:         matchPlan = plans.find(p => p.id === "star-assure") || plans[0];
+342:       }
+343: 
+344:       matchedPlanId = matchPlan.id;
+345:       mockData = {
+346:         recommendedPlanId: matchPlan.id,
+347:         confidence: 96,
+348:         whyExplanation: `Based on your family setup of ${formData.members.join(", ")} and your priority on coverage, the ${matchPlan.name} is the ideal fit. It avoids heavy room renting limitations, locks in affordable rates, and settles claims instantly within 2 hours of exit.`,
+349:         savingsEstimate: savings,
+350:         cashlessCount: count,
+351:         monthlyPremium: matchPlan.premium,
+352:         highlightedBenefits: matchPlan.keyBenefits
+353:       };
+354:     }
+355: 
+356:     // Submit lead in all cases to register lead in Supabase automatically
+357:     try {
+358:       const isContactFilled = !!(leadForm.name || leadForm.email || leadForm.phone);
+359:       const leadRes = await fetch("/api/submit-lead", {
+360:         method: "POST",
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

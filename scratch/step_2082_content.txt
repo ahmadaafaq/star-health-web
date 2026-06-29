@@ -1,0 +1,71 @@
+Created At: 2026-06-21T13:08:19Z
+Completed At: 2026-06-21T13:08:20Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx.recovered`
+Total Lines: 1534
+Total Bytes: 95911
+Showing lines 1 to 800
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import { useState, useEffect } from "react";
+2: import { motion, AnimatePresence } from "motion/react";
+3: import { 
+4:   ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle, 
+5:   Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
+6:   Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
+7:   Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
+8: } from "lucide-react";
+9: import { Conversation } from "@elevenlabs/client";
+10: import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
+11: 
+12: interface AIAdvisorProps {
+13:   onRecommendationReceived: (response: RecommendationResponse) => void;
+14:   plans: Plan[];
+15: }
+16: 
+17: export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisorProps) {
+18:   const [step, setStep] = useState(1);
+19:   const [loading, setLoading] = useState(false);
+20:   const [formData, setFormData] = useState<RecommendationRequest>({
+21:     age: "35",
+22:     members: ["myself"],
+23:     city: "tier-1", // Metro
+24:     budget: "moderate",
+25:     preExisting: [],
+26:     diabetes: false,
+27:     parentsIncluded: false,
+28:     employerInsurance: false,
+29:     pregnancyPlan: false,
+30:     preferredHospital: ""
+31:   });
+32: 
+33:   const [myselfSelected, setMyselfSelected] = useState<boolean>(true);
+34:   const [spouseSelected, setSpouseSelected] = useState<boolean>(false);
+35:   const [childrenCount, setChildrenCount] = useState<number>(0);
+36:   const [myParentsCount, setMyParentsCount] = use
+<truncated 44732 bytes>
+ 
+776:                   </div>
+777:                 )}
+778: 
+779:                 {step === 3 && (
+780:                   <div className="space-y-4 text-left">
+781:                     <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">Location & Budget Profile</h3>
+782:                     <p className="text-slate-500 text-sm">Health care costs vary across Indian cities. We calibrate cashless rates based on location tier.</p>
+783: 
+784:                     <div className="space-y-4">
+785:                       {/* City Selection */}
+786:                       <div className="space-y-2">
+787:                         <label className="block text-sm font-bold text-slate-700">Where do you reside currently?</label>
+788:                         <div className="grid grid-cols-3 gap-2">
+789:                           {[
+790:                             { value: "tier-1", label: "Tier 1 Metros", desc: "Delhi, Mumbai, Bengaluru" },
+791:                             { value: "tier-2", label: "Tier 2 Cities", desc: "Jaipur, Lucknow, Kochi" },
+792:                             { value: "tier-3", label: "Tier 3 Towns", desc: "Rural / Non-metro hubs" }
+793:                           ].map(c => (
+794:                             <button
+795:                               key={c.value}
+796:                               onClick={() => setFormData({ ...formData, city: c.value })}
+797:                               className={`p-3 text-left border rounded-xl cursor-pointer ${formData.city === c.value ? 'bg-blue-50 border-star-blue text-star-blue font-bold' : 'bg-white text-slate-600 border-slate-200'}`}
+798:                             >
+799:                               <div className="font-bold text-xs">{c.label}</div>
+800:                               <div className="text-[9px] text-slate-500 mt-0.5 leading-tight">{c.desc}</div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

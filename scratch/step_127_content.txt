@@ -1,0 +1,49 @@
+Created At: 2026-06-20T14:04:42Z
+Completed At: 2026-06-20T14:04:42Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx`
+Total Lines: 1686
+Total Bytes: 100482
+Showing lines 1170 to 1290
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1170:                                <button onClick={handleSendWhatsapp} disabled={sendingWhatsapp || whatsappSent || !leadForm.phone} className={`p-2 rounded-full transition cursor-pointer disabled:opacity-50 ${whatsappSent ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title="Send details to WhatsApp">
+1171:                                  {whatsappSent ? <CheckCircle2 className="w-5 h-5"/> : <MessageCircle className="w-5 h-5" />}
+1172:                                </button>
+1173:                                <div className="relative group/scheduler">
+1174:                                  <button className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition cursor-pointer" title="Schedule Call">
+1175:                                    <Calendar className="w-5 h-5" />
+1176:                                  </button>
+1177:                                  <div className="absolute top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl p-4 shadow-xl z-20 hidden group-hover/scheduler:block focus-within:block right-0">
+1178:                                    <div className="text-[11px] font-bold text-slate-700 mb-3 uppercase tracking-wider">Schedule AI Advisor Call</div>
+1179:                                    {!callScheduledConfirmed ? (
+1180:                                      <div className="flex flex-col gap-2">
+1181:                                        <input
+1182:                                          type="datetime-local"
+1183:                   
+<truncated 7697 bytes>
+ext-emerald-500 shrink-0 mt-0.5" />
+1266:                               <span>{b}</span>
+1267:                             </li>
+1268:                           ))}
+1269:                         </ul>
+1270:                       </div>
+1271: 
+1272:                       {/* Want to know more? */}
+1273:                       <div className="pt-2">
+1274:                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+1275:                           <h4 className="text-sm font-black text-blue-900 mb-1">Want to know more?</h4>
+1276:                           <p className="text-xs text-blue-700 font-medium mb-3">
+1277:                             We will send you the complete policy details over WhatsApp, and you can chat with our AI agent to explore more.
+1278:                           </p>
+1279:                           <div className="space-y-2">
+1280:                             <button
+1281:                               onClick={handleSendWhatsapp}
+1282:                               disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}
+1283:                               className="w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+1284:                             >
+1285:                               <MessageCircle className="w-4 h-4" />
+1286:                               {sendingWhatsapp ? "Sending Details..." : whatsappSent ? "Sent to WhatsApp!" : "Send details to WhatsApp"}
+1287:                             </button>
+1288:                             
+1289:                             {!callScheduledConfirmed ? (
+1290:                               <div className="flex flex-col sm:flex-row gap-2 pt-1">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

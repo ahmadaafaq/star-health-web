@@ -1,0 +1,115 @@
+Created At: 2026-06-21T12:58:18Z
+Completed At: 2026-06-21T12:58:18Z
+
+				The command completed successfully.
+				Output:
+				<truncated 2331 lines>
+-                                preferredHospital: formData.preferredHospital,
+-                                recommendedPlanId: matchedPlan?.id
+-                              })
+-                            });
+-                            if (res.ok) {
+-                              const data = await res.json();
+-                              setLeadSubmitted(true);
+-                              setSubmittedLeadData(data.lead);
+-                            } else {
+-                              throw new Error("Lead submission failed");
+-                            }
+-                          } catch (e) {
+-                            console.error(e);
+-                            alert("Database submission failed. Please try again.");
+-                          } finally {
+-                            setSubmittingLead(false);
+-                          }
+-                        }}
+-                        disabled={submittingLead}
+-                        className="w-full md:w-auto px-8 py-3 bg-[#00338D] hover:bg-blue-900 text-white font-extrabold rounded-xl text-xs transition duration-150 cursor-pointer shadow-md disabled:opacity-50"
+-                      >
+-                        {submittingLead ? (
+-                          <span className="flex items-center gap-1.5 justify-center">
+-                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving Quote...
+-                          </span>
+-                        ) : (
+-                          "💾 Secure Quote & Save Lead"
+-                        )}
+-                      </button>
+-                    </div>
+-                  </div>
+-                ) : (
+-                  <div className="bg-emerald-50 border border-emerald-250 rounded-3xl p-6 sm:p-8 mt-8 space-y-5 text-left animate-fadeIn">
+-                    <div className="flex items-center gap-3">
+-                
+<truncated 4174 bytes>
+);
++
++    const handleResize = () => {
++      width = canvas.width = window.innerWidth;
++      height = canvas.height = window.innerHeight;
++    };
++    window.addEventListener("resize", handleResize);
++
++    const colors = ["#FF3366", "#00338D", "#FFD700", "#00E5FF", "#7C4DFF", "#4CAF50"];
++    const particles = Array.from({ length: 150 }).map(() => ({
++      x: Math.random() * width,
++      y: Math.random() * height - height,
++      r: Math.random() * 6 + 4,
++      d: Math.random() * width,
++      color: colors[Math.floor(Math.random() * colors.length)],
++      tilt: Math.random() * 10 - 5,
++      tiltAngleIncremental: Math.random() * 0.07 + 0.02,
++      tiltAngle: 0,
++      speed: Math.random() * 3 + 2,
++    }));
++
++    const draw = () => {
++      ctx.clearRect(0, 0, width, height);
++
++      particles.forEach((p, idx) => {
++        p.tiltAngle += p.tiltAngleIncremental;
++        p.y += p.speed;
++        p.x += Math.sin(p.tiltAngle) * 0.5;
++        p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
++
++        ctx.beginPath();
++        ctx.lineWidth = p.r;
++        ctx.strokeStyle = p.color;
++        ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
++        ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
++        ctx.stroke();
++
++        if (p.y > height) {
++          particles[idx] = {
++            ...p,
++            x: Math.random() * width,
++            y: -20,
++            tilt: Math.random() * 10 - 5,
++            speed: Math.random() * 3 + 2,
++          };
++        }
++      });
++
++      animationFrameId = requestAnimationFrame(draw);
++    };
++
++    draw();
++
++    const timeoutId = setTimeout(() => {
++      cancelAnimationFrame(animationFrameId);
++      ctx.clearRect(0, 0, width, height);
++    }, 3000);
++
++    return () => {
++      window.removeEventListener("resize", handleResize);
++      cancelAnimationFrame(animationFrameId);
++      clearTimeout(timeoutId);
++    };
++  }, []);
++
++  return (
++    <canvas
++      ref={canvasRef}
++      className="fixed inset-0 pointer-events-none z-50 w-full h-full"
++    />
++  );
++}
+

@@ -1,0 +1,83 @@
+Created At: 2026-06-20T15:44:44Z
+Completed At: 2026-06-20T15:44:44Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/server.ts`
+Total Lines: 740
+Total Bytes: 30664
+Showing lines 400 to 550
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+400:         });
+401:         const rawText = response.text ? response.text.trim() : "";
+402:         console.log("Gemini Lead Scorer Output:", rawText);
+403:         const aiRank = JSON.parse(rawText);
+404:         aiScore = aiRank.score ?? aiScore;
+405:         aiType = aiRank.type ?? aiType;
+406:         aiExplanation = aiRank.rationale ?? aiExplanation;
+407:       } catch (e) {
+408:         console.error("Gemini lead scorer failed, using rules-based fallback:", e);
+409:         // Rules-based fallback
+410:         let score = 60;
+411:         if (lead.pregnancyPlan) score += 15;
+412:         if (lead.parentsIncluded) score += 10;
+413:         if (lead.employerInsurance) score -= 20;
+414:         if (lead.preExistingDiseases && lead.preExistingDiseases.length > 0) score += 5;
+415:         if (lead.preferredHospital) score += 10;
+416:         if (score > 100) score = 100;
+417:         if (score < 0) score = 0;
+418:         
+419:         aiScore = score;
+420:         aiType = score >= 80 ? "hot" : score < 40 ? "cold" : "warm";
+421:         aiExplanation = `Rules-based assessment: Intent is ${aiType} because of family coverage setup and ${lead.employerInsurance ? 'existing corporate cover' : 'no active corporate cover'}.`;
+422:       }
+423:     } else {
+424:       // Rules-based score when Gemini is not configured
+425:       let score = 60;
+426:       if (lead.pregnancyPlan) score += 15;
+427:       if (lead.parentsIncluded) score += 10;
+428:       if (lead.employerInsurance) score -= 20;
+429:       if (lead.preExistingDiseases && lead.preExistingDiseases.length > 
+<truncated 3457 bytes>
+ targetId = insertedLead.id;
+508: 
+509:       // Use the plan ID from the request body as primary source (most reliable),
+510:       // fall back to whatever Supabase returned in the insert response
+511:       const planId: string = lead.recommendedPlanId || insertedLead.recommended_plan_id || "";
+512: 
+513:       console.log(`Triggering WhatsApp welcome message for ${targetName} (${targetPhone}), plan: ${planId}`);
+514:       
+515:       // Make asynchronous request to Python backend
+516:       fetch(`${RAG_API_URL}/send-welcome`, {
+517:         method: "POST",
+518:         headers: { "Content-Type": "application/json" },
+519:         body: JSON.stringify({
+520:           phone: targetPhone,
+521:           name: targetName,
+522:           lead_id: targetId,
+523:           recommended_plan_id: planId || null
+524:         })
+525:       }).then(async (response) => {
+526:         if (response.ok) {
+527:           const resJson = await response.json();
+528:           console.log(`Welcome message response status:`, resJson);
+529:         } else {
+530:           console.error(`Failed to send welcome message:`, response.statusText);
+531:         }
+532:       }).catch((err) => {
+533:         console.error("Error calling send-welcome endpoint:", err);
+534:       });
+535:     }
+536: 
+537:     res.json({ success: true, lead: data[0] });
+538:   } catch (error: any) {
+539:     console.error("Lead submission endpoint error:", error);
+540:     res.status(500).json({ error: "Could not submit lead" });
+541:   }
+542: });
+543: 
+544: // Endpoint to explicitly send policy details via WhatsApp
+545: app.post("/api/send-whatsapp", async (req, res) => {
+546:   try {
+547:     const { lead_id, phone, name, recommended_plan_id } = req.body;
+548:     if (!phone || !name) {
+549:       return res.status(400).json({ error: "Missing phone or name" });
+550:     }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -11,7 +11,7 @@ dotenv.config();
 const RAG_API_URL = process.env.RAG_API_URL || "http://localhost:8000";
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 app.use(express.json());
 
@@ -461,7 +461,7 @@ Return ONLY a raw JSON object (no markdown):
         if (lead.preferredHospital) score += 10;
         if (score > 100) score = 100;
         if (score < 0) score = 0;
-        
+
         aiScore = score;
         aiType = score >= 80 ? "hot" : score < 40 ? "cold" : "warm";
         aiExplanation = `Rules-based assessment: Intent is ${aiType} because of family coverage setup and ${lead.employerInsurance ? 'existing corporate cover' : 'no active corporate cover'}.`;
@@ -476,7 +476,7 @@ Return ONLY a raw JSON object (no markdown):
       if (lead.preferredHospital) score += 10;
       if (score > 100) score = 100;
       if (score < 0) score = 0;
-      
+
       aiScore = score;
       aiType = score >= 80 ? "hot" : score < 40 ? "cold" : "warm";
       aiExplanation = `Rules-based evaluation: Conversion likelihood scored ${score} based on age, family size, and employer backup status.`;
@@ -557,7 +557,7 @@ Return ONLY a raw JSON object (no markdown):
       const planId: string = lead.recommendedPlanId || insertedLead.recommended_plan_id || "";
 
       console.log(`Triggering WhatsApp welcome message for ${targetName} (${targetPhone}), plan: ${planId}`);
-      
+
       // Make asynchronous request to Python backend
       fetch(`${RAG_API_URL}/send-welcome`, {
         method: "POST",
@@ -596,10 +596,18 @@ app.post("/api/send-whatsapp", async (req, res) => {
     }
 
     // Optionally update the DB status to indicate it was sent
-    await supabaseClient
-      .from('leads')
-      .update({ whatsapp_consent: true })
-      .eq('id', lead_id);
+    if (lead_id) {
+      await supabaseClient
+        .from('leads')
+        .update({ whatsapp_consent: true })
+        .eq('id', lead_id);
+    } else {
+      const cleanPhone = phone.replace(/\D/g, "");
+      await supabaseClient
+        .from('leads')
+        .update({ whatsapp_consent: true })
+        .or(`phone.eq.${phone},phone.eq.+${cleanPhone},phone.eq.${cleanPhone},phone.ilike.%${cleanPhone}`);
+    }
 
     // Make asynchronous request to Python backend
     const response = await fetch(`${RAG_API_URL}/send-welcome`, {
@@ -802,6 +810,24 @@ app.get("/api/messages/:phone", async (req, res) => {
   }
 });
 
+// GET WhatsApp message history for a single lead ID (from Python RAG backend)
+app.get("/api/messages/lead/:leadId", async (req, res) => {
+  try {
+    const leadId = req.params.leadId;
+    const response = await fetch(`${RAG_API_URL}/conversation/lead/${encodeURIComponent(leadId)}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("RAG API responded with error:", response.status, errText);
+      return res.status(response.status).json({ error: errText });
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Proxy messages by lead ID error:", error);
+    res.status(500).json({ error: "Failed to communicate with RAG API server" });
+  }
+});
+
 // POST send manual WhatsApp custom reply (via Python RAG backend)
 app.post("/api/send-custom-whatsapp", async (req, res) => {
   try {
@@ -923,7 +949,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server successfully started and running on http://0.0.0.0:${PORT}`);
+    console.log(`Server successfully started and running on http://localhost:${PORT}`);
   });
 }
 

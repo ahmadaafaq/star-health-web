@@ -1,0 +1,28 @@
+        onError: (err: any) => {
+          console.error("VOIP call error:", err);
+          alert("VOIP call error callback: " + (err.message || JSON.stringify(err)));
+          setVoipStatus("idle");
+          setVoipActive(false);
+          setConversationInstance(null);
+        },
+        onModeChange: ({ mode }: { mode: "speaking" | "listening" }) => {
+          setVoipStatus(mode);
+        }
+      };
+
+      if (signed_url) {
+        console.log("Connecting using secure signed URL from backend.");
+        sessionParams.signedUrl = signed_url;
+      } else {
+        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+        sessionParams.agentId = fallbackAgentId;
+      }
+
+      const conv = await Conversation.startSession(sessionParams);
+      setConversationInstance(conv);
+    } catch (err: any) {
+      console.error("Error starting VOIP session:", err);
+      alert("Error starting VOIP session: " + (err.message || err));
+      setVoipStatus("idle");
+      setVoipActive(false);
+    }

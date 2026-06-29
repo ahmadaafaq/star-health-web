@@ -1,0 +1,184 @@
+--- Step 132 Tool replace_file_content ---
+Instruction: "Import Phone, PhoneOff, Mic, Volume2 from lucide-react, and import Conversation from @elevenlabs/client"
+Description: "Update lucide-react imports and add @elevenlabs/client Conversation import in AIAdvisor.tsx"
+ReplacementContent length: 466
+--- Step 134 Tool replace_file_content ---
+Instruction: "Insert the voip state and start/end call handlers right below the handleSendWhatsapp function"
+Description: "Add VOIP state and methods in AIAdvisor.tsx"
+ReplacementContent length: 2071
+--- Step 140 Tool replace_file_content ---
+Instruction: "Insert the VOIP button / active call widget right below the Send details to WhatsApp button in AIAdvisor.tsx"
+Description: "Render VOIP Calling UI in AIAdvisor.tsx"
+ReplacementContent length: 2071
+--- Step 168 Tool replace_file_content ---
+Instruction: "Add the state variables and functions right below matchedPlan = getMatchedPlan() and before the return statement"
+Description: "Insert state and handler functions for WhatsApp, Scheduling, and VOIP in AIAdvisor.tsx"
+ReplacementContent length: 2071
+--- Step 177 Tool replace_file_content ---
+Instruction: "Replace recommended choice title block with the version including WhatsApp and Scheduler buttons next to the title"
+Description: "Add WhatsApp and Scheduler buttons in recommended choice header in AIAdvisor.tsx"
+ReplacementContent length: 2068
+--- Step 183 Tool replace_file_content ---
+Instruction: "Insert the Want to know more? block at the end of the recommended choice column card in AIAdvisor.tsx"
+Description: "Add Want to know more? UI block with VOIP and Scheduler at the bottom of the recommended choice card in AIAdvisor.tsx"
+ReplacementContent length: 2071
+--- Step 189 Tool replace_file_content ---
+Instruction: "Update the import block from lucide-react and import Conversation from @elevenlabs/client"
+Description: "Update lucide-react and import Conversation in AIAdvisor.tsx"
+ReplacementContent length: 466
+--- Step 291 Tool replace_file_content ---
+Instruction: "Modify handleStartVoipCall to try getting signedUrl first, and fallback to direct client-side public agentId if it fails."
+Description: "Add a client-side public agent fallback to startSession if the signed-url backend request fails."
+ReplacementContent length: 2071
+--- Step 297 Tool replace_file_content ---
+Instruction: "Add customer_name from leadForm.name to the dynamicVariables parameter."
+Description: "Pass customer_name in dynamicVariables for ElevenLabs conversation session."
+ReplacementContent length: 514
+--- Step 328 Tool replace_file_content ---
+Instruction: "Modify fetch to support reading usePublicAgent flag and extract agentId."
+Description: "Update frontend to support public agent ID fallback and bypass signedUrl securely."
+ReplacementContent length: 916
+--- Step 332 Tool replace_file_content ---
+Instruction: "Update the else block to use fallbackAgentId variable rather than hardcoded value."
+Description: "Change connection configuration to use fallbackAgentId variable when starting ElevenLabs session."
+ReplacementContent length: 335
+--- Step 370 Tool replace_file_content ---
+Instruction: "Modify the lead capture block to remove the toggle and keep the form visible but disabled on success."
+Description: "Remove the Lead Registered Successfully section from web and keep the lead form disabled with a checkmark on submit."
+ReplacementContent length: 2068
+--- Step 382 Tool replace_file_content ---
+Instruction: "Delete the Supabase Lead Capture Form div completely."
+Description: "Remove duplicate lead capture form entirely from recommendation screen."
+ReplacementContent length: 2
+--- Step 388 Tool replace_file_content ---
+Instruction: "Replace the broken div tags and button fragments with matching tags."
+Description: "Fix syntax error from previous deletion by restoring correct JSX tag matching at end of file."
+ReplacementContent length: 414
+--- Step 406 Tool replace_file_content ---
+Instruction: "Update onError and catch block to alert user of the exact error thrown."
+Description: "Add alert messages to startSession errors to display the reason for VOIP start failures to the user."
+ReplacementContent length: 1103
+--- Step 412 Tool replace_file_content ---
+Instruction: "Check if navigator.mediaDevices is defined, alert user if not, and return early."
+Description: "Add secure context/microphone API support check before initiating WebRTC call."
+ReplacementContent length: 579
+--- Step 642 Tool replace_file_content ---
+Instruction: 
+Description: "Remove unused admin view states, fetchLeads, updateLeadStatus, KANBAN_COLUMNS and renderKanban function from AIAdvisor.tsx"
+ReplacementContent length: 352
+--- Step 646 Tool replace_file_content ---
+Instruction: 
+Description: "Fix trailing braces syntax error in AIAdvisor.tsx lead management states definition"
+ReplacementContent length: 352
+--- Step 654 Tool multi_replace_file_content ---
+Instruction: "Replace admin button toggle and JSX wrapper elements with a simple redirect CTA to /admin."
+Description: "Remove isAdminView state wrapper and Kanban render wrapper from AIAdvisor.tsx, replacing button with redirect link to /admin"
+Number of chunks: 1734
+--- Step 1282 Tool replace_file_content ---
+Instruction: "Add step narration banner."
+Description: "Add premium step narrations below progress indicator to inspire customer pride and responsibility."
+ReplacementContent length: 2032
+--- Step 1286 Tool replace_file_content ---
+Instruction: "Add congratulations banner."
+Description: "Add congratulations narration banner at the top of recommendation results."
+ReplacementContent length: 1208
+--- Step 1348 Tool multi_replace_file_content ---
+Instruction: "Add validation state, require Name, Phone, and WhatsApp/Calling consent in Step 5 UI and runRecommendation, and display error messages."
+Description: "Update Step 5 of AIAdvisor to make Name, Phone, and Consent required, styling input validation highlights and consent checkbox card, and verifying input requirements before proceeding."
+Number of chunks: 2072
+--- Step 1375 Tool multi_replace_file_content ---
+Instruction: "Update imports, add stepNarrationAcknowledged state, implement overlays inside Card Body, add custom shake animation using motion.div on the error banner, reset overlay state on redo, and append Confetti component."
+Description: "Implement solemn fullscreen moral overlays on wizard steps, custom commit action prompts, dynamic shake alert entry for validation errors, canvas-confetti on successful recommendation, and reset states."
+Number of chunks: 2071
+--- Step 1426 Tool multi_replace_file_content ---
+Instruction: "Remove mutual exclusivity checks in incrementMyParents and incrementSpouseParents, remove conditional disabled classes and locks from parents selector UI cards, and update regulatory text."
+Description: "Remove the logic that restricted users to choosing only one set of parents (either yours or spouse's). Users can now select both sets of parents concurrently under Family Health Optima rules, and the regulatory warning text has been updated."
+Number of chunks: 2072
+--- Step 1444 Tool multi_replace_file_content ---
+Instruction: "Remove stepNarrationAcknowledged state, implement split grid layout inside Card Body, clean up Redo button click handler, and remove full card overlay."
+Description: "Implement side-by-side layout for wizard questionnaire: left column displays solemn moral narration with glowing beating icon; right column hosts active question inputs and operations. Remove fullscreen transition overlay block, reset, and narration helper states."
+Number of chunks: 2072
+--- Step 1468 Tool multi_replace_file_content ---
+Instruction: "Add COMMON_AILMENTS_LIST constant, customAilmentInput & showAilmentSuggestions states, addCustomAilment & removeCustomAilment functions, search bar UI layout in Step 2, and compliance banner markup in Step 5."
+Description: "Add pre-existing conditions manual search & autocomplete tag input in Step 2, and add DPDP 2023 Privacy Compliance banner above the consent checkbox card in Step 5."
+Number of chunks: 2072
+--- Step 1524 Tool replace_file_content ---
+Instruction: "Add the constants TRUST_CAROUSEL_ITEMS and LOADER_STEPS after COMMON_AILMENTS_LIST."
+Description: "Define TRUST_CAROUSEL_ITEMS and LOADER_STEPS constants in AIAdvisor.tsx."
+ReplacementContent length: 1206
+--- Step 1530 Tool replace_file_content ---
+Instruction: "Add state variables for activeCarouselIndex and loadingStep, and the useEffect logic to rotate them during loading."
+Description: "Define activeCarouselIndex, loadingStep states and the useEffect rotation logic in AIAdvisor.tsx."
+ReplacementContent length: 1029
+--- Step 1536 Tool multi_replace_file_content ---
+Instruction: "Enforce a minimum delay of 3.8 seconds during loading to let the user read trust facts and progress ticker."
+Description: "Record startTime at beginning of runRecommendation and enforce a minimum loading delay of 3800ms before setting loading to false."
+Number of chunks: 505
+--- Step 1548 Tool replace_file_content ---
+Instruction: "Insert the loading screen overlay under the Confetti tag."
+Description: "Inject the premium glassmorphic loader screen overlay with trust carousel and sequential steps progress ticker inside the questionnaire card body in AIAdvisor.tsx."
+ReplacementContent length: 2071
+--- Step 1554 Tool multi_replace_file_content ---
+Instruction: "Remove the duplicate comment and delete the congratulations banner from the final view to prevent duplication."
+Description: "Clean up duplicate comments and delete redundant congratulations banner from results page in AIAdvisor.tsx."
+Number of chunks: 1559
+--- Step 1664 Tool multi_replace_file_content ---
+Instruction: "Two edits in AIAdvisor.tsx: (1) add myParentsCount/spouseParentsCount to setFormData inside updateMembersListState; (2) add them to the /api/submit-lead body."
+Description: "Pass myParentsCount and spouseParentsCount into formData via updateMembersListState, and include them in the /api/submit-lead body so the backend gets full parent breakdown."
+Number of chunks: 1745
+--- Step 1826 Tool replace_file_content ---
+Instruction: "Change the gap-25 typo to gap-4 in the budget selector grid, improve button padding, and add hover/transition classes."
+Description: "Fix the budget expectation card layout width by correcting the gap-25 typo to gap-4, and enhance selectors with smooth transitions, hover styles, and shadow/glow highlights."
+ReplacementContent length: 2071
+--- Step 1863 Tool replace_file_content ---
+Instruction: "Move the selector section above the comparison card grid and restructure the Compared Plan card to lay out flat and parallel to the Recommended Plan card."
+Description: "Move the side-by-side plan inspector selector and buttons section above the comparison cards grid container, aligning the Recommended and Compared cards directly side-by-side at the same height."
+ReplacementContent length: 2072
+--- Step 1871 Tool replace_file_content ---
+Instruction: "Insert the selector title and grid toggles wrapper above the grid tag, opening a parent container."
+Description: "Move the selector title and toggles above the two-column grid."
+ReplacementContent length: 2070
+--- Step 1881 Tool multi_replace_file_content ---
+Instruction: "Remove selector toggles and headers from the right card top, flatten its card styling, and clean up closing divs at the bottom."
+Description: "Restructure the SELECT & COMPARE right column to remove the nested border box and duplicate selector toggles, matching the layout of the RECOMMENDED CHOICE left column."
+Number of chunks: 2067
+--- Step 1899 Tool replace_file_content ---
+Instruction: "Insert the selector title and grid toggles wrapper above the grid tag, opening a parent container."
+Description: "Move selector controls above the comparison cards grid container."
+ReplacementContent length: 2070
+--- Step 1907 Tool multi_replace_file_content ---
+Instruction: "Edit the top and bottom parts of the SELECT & COMPARE right column inside AIAdvisor.tsx."
+Description: "Remove selector toggles and headers from the right card, restructure it as a flat layout, and clean up closing divs at the bottom."
+Number of chunks: 2067
+--- Step 1921 Tool multi_replace_file_content ---
+Instruction: "Apply three coordinated replacements to move selector options to the top, restructure Right Column card details, and close the newly opened wrapper div."
+Description: "Restructure the side-by-side comparison screen: move selector above cards, flatten Compared Plan details, and align closing JSX tags."
+Number of chunks: 2071
+--- Step 2177 Tool multi_replace_file_content ---
+Instruction: "Re-integrate the split-grid layout (grid grid-cols-1 lg:grid-cols-12 gap-8) inside the Wizard Card Body for steps 1-5. Place the moral narrative panel in the left column (lg:col-span-4) and the active question inputs in the right column (lg:col-span-8)."
+Description: "Restore the side-by-side moral narrative panel and split-grid layout inside the wizard questionnaire container."
+Number of chunks: 2071
+--- Step 2243 Tool multi_replace_file_content ---
+Instruction: "Update AIAdvisor.tsx file to recover the user modifications: enable concurrent parents selection and set max members to 9, implement diagnosed conditions autocomplete search and tags in Step 2, make Name/Phone/Consent required with red validation highlighting in Step 5, and insert the DPDP 2023 compliance banner."
+Description: "Restore all user edits: max 9 members limit, concurrent parents/in-laws selection in Step 1, manual diagnosed conditions search/autocomplete in Step 2, and required fields with validation errors & consent checkbox + DPDP 2023 banner in Step 5."
+Number of chunks: 2072
+--- Step 2278 Tool replace_file_content ---
+Instruction: "Update the location and budget profile grid columns to use standard gap-4 spacing and ensure buttons stretch fully using w-full."
+Description: "Increase width and improve layout of Location & Budget Profile section cards by changing gap-25 to gap-4, adding w-full to buttons, and utilizing flex-1 min-w-0 wrapper for labels."
+ReplacementContent length: 2064
+--- Step 2304 Tool replace_file_content ---
+Instruction: "Fix the Location & Budget Profile grids to use gap-4, apply w-full to buttons, and wrap text components in a flex container for correct text wrapping and card width utilization."
+Description: "Increase the width of the cards in the Location & Budget Profile section by fixing the grid layout gap-25 class to gap-4, adding w-full to buttons, and adding flex-1 min-w-0 container to text content."
+ReplacementContent length: 2064
+--- Step 2323 Tool replace_file_content ---
+Instruction: "Re-apply the layout width changes to Step 3 Location & Budget Profile grid."
+Description: "Fix Location & Budget Profile card widths by changing gap-25 to gap-4, adding w-full to buttons, and utilizing a flex wrapper for text labels."
+ReplacementContent length: 2064
+--- Step 2451 Tool multi_replace_file_content ---
+Instruction: "Apply multi-chunk updates to AIAdvisor.tsx to add imports, constants, states, helper loops, backend parameter hooks, timer delays, absolute loaders, and confetti elements."
+Description: "Re-integrate premium loader overlay, trust carousel, canvas confetti, minimum delay of 3.8s, and parent counts passing to RAG backend."
+Number of chunks: 2072
+--- Step 2653 Tool replace_file_content ---
+Instruction: "Change 'comprehensive' checks to 'star-comprehensive' in the Select Instead handler of AIAdvisor.tsx."
+Description: "Fix comparison plan ID check in manual selection handler to use the correct 'star-comprehensive' ID instead of 'comprehensive'."
+ReplacementContent length: 378

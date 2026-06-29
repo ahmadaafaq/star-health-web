@@ -1,0 +1,11 @@
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+
+    // Check if browser is in a secure context (localhost or https) allowing media devices access
+    if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Microphone access is disabled. Please ensure you are accessing the page via 'http://localhost:3000' or 'http://127.0.0.1:3000' (browsers restrict microphone access to localhost or HTTPS).");
+      return;
+    }
+
+    setVoipStatus("connecting");
+    setVoipActive(true);

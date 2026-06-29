@@ -1,0 +1,58 @@
+Created At: 2026-06-21T11:21:02Z
+Completed At: 2026-06-21T11:21:02Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx`
+Total Lines: 1553
+Total Bytes: 92987
+Showing lines 850 to 1100
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+850:                       </div>
+851:                     </div>
+852:                   </div>
+853:                 )}
+854: 
+855:                 {step === 4 && (
+856:                   <div className="space-y-4 text-left">
+857:                     <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">Employer & Hospital Support</h3>
+858:                     <p className="text-slate-500 text-sm">Final step: calibrate your existing insurance buffer and specify any hospital alignments.</p>
+859: 
+860:                     <div className="space-y-4">
+861:                       {/* Employer Insurance */}
+862:                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between gap-4">
+863:                         <div className="space-y-1">
+864:                           <label className="text-sm font-bold text-slate-850 block">Do you have existing Corporate/Employer health insurance?</label>
+865:                           <p className="text-xs text-slate-500">If yes, we can recommend highly-effective Super Top-Up plans for ultra savings.</p>
+866:                         </div>
+867:                         <div className="flex gap-2 shrink-0">
+868:                           <button
+869:                             onClick={() => setFormData({ ...formData, employerInsurance: true })}
+870:                             className={`px-4 py-2 text-xs font-bold rounded-lg ${formData.employerInsurance ? 'bg-star-blue text-white' : 'bg-white border border-slate-200 text-slate-600'}`}
+871:    
+<truncated 14852 bytes>
+Name="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-blue-200 rounded text-[10px] font-extrabold text-blue-700 hover:bg-blue-50 transition cursor-pointer shadow-sm w-full">
+1075:                                          📅 Add to Calendar
+1076:                                        </a>
+1077:                                      </div>
+1078:                                    )}
+1079:                                  </div>
+1080:                                </div>
+1081:                             </div>
+1082:                           </div>
+1083: 
+1084:                           <p className="text-xs text-slate-505 font-bold italic mt-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100/30">
+1085:                             " {recommendation.whyExplanation} "
+1086:                           </p>
+1087:                         </div>
+1088:                       </div>
+1089: 
+1090:                       {/* Premium details block */}
+1091:                       <div className="bg-emerald-50/40 border border-emerald-100 p-4.5 rounded-xl flex justify-between items-center">
+1092:                         <div className="text-left">
+1093:                           <span className="text-[10px] text-emerald-800 font-extrabold uppercase tracking-wider block">Estimated Base Premium</span>
+1094:                           <span className="text-lg text-slate-500 font-medium text-xs">Based on age {formData.age}</span>
+1095:                         </div>
+1096:                         <div className="text-right">
+1097:                           <span className="text-3xl font-black text-slate-900">₹{recommendation.monthlyPremium}</span>
+1098:                           <span className="text-slate-500 text-xs font-medium"> / mo</span>
+1099:                         </div>
+1100:                       </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

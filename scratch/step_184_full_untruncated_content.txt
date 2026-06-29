@@ -1,0 +1,58 @@
+Created At: 2026-06-20T14:11:20Z
+Completed At: 2026-06-20T14:11:22Z
+The following changes were made by the replace_file_content tool to: /Users/apple/Documents/ai - projects/star-health-web/src/components/AIAdvisor.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -1218,6 +1218,118 @@
+                         </ul>
+                       </div>
+ 
++                      {/* Want to know more? */}
++                      <div className="pt-2">
++                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
++                          <h4 className="text-sm font-black text-blue-900 mb-1">Want to know more?</h4>
++                          <p className="text-xs text-blue-700 font-medium mb-3">
++                            We will send you the complete policy details over WhatsApp, and you can chat with our AI agent to explore more.
++                          </p>
++                          <div className="space-y-2">
++                            <button
++                              onClick={handleSendWhatsapp}
++                              disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}
++                              className="w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
++                            >
++                              <MessageCircle className="w-4 h-4" />
++                              {sendingWhatsapp ? "Sending Details..." : whatsappSent ? "Sent to WhatsApp!" : "Send details to WhatsApp"}
++                            </button>
++
++                            {voipActive ? (
++                              <div className="bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800">
++                                <div className="flex justify-between items-center"
+<truncated 5335 bytes>
+       <Calendar className="w-4 h-4" />
++                                  Schedule Call
++                                </button>
++                              </div>
++                            ) : (
++                              <div className="bg-white border border-emerald-100 rounded-lg p-2.5 mt-2 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
++                                <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1.5">
++                                  ✅ Call Confirmed
++                                </span>
++                                <a 
++                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Star+Health+Insurance+Consultation&details=Discussing+your+health+insurance+needs+and+the+${matchedPlan?.name}+plan.&dates=${new Date(leadForm.scheduledCallAt).toISOString().replace(/-|:|\.\d\d\d/g,"")}/${new Date(new Date(leadForm.scheduledCallAt).getTime() + 30*60000).toISOString().replace(/-|:|\.\d\d\d/g,"")}`}
++                                  target="_blank"
++                                  rel="noopener noreferrer"
++                                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded text-[10px] font-extrabold text-blue-700 hover:bg-blue-100 transition cursor-pointer shadow-sm w-max"
++                                >
++                                  📅 Add to Calendar
++                                </a>
++                              </div>
++                            )}
++                          </div>
++                        </div>
++                      </div>
++
+                     </div>
+ 
+                     {/* SELECT & COMPARE (Right Column) */}
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.

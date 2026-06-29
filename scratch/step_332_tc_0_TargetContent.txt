@@ -1,0 +1,1 @@
+"      if (signed_url) {\n        console.log(\"Connecting using secure signed URL from backend.\");\n        sessionParams.signedUrl = signed_url;\n      } else {\n        console.log(\"Connecting directly using public agent ID (client-side initiation).\");\n        sessionParams.agentId = \"agent_9101kvjj8g1cecatsrr130tgv6rn\";\n      }"

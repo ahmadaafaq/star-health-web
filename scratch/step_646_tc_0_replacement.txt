@@ -1,0 +1,1 @@
+"  // Supabase Lead Management state variables\n  const [leadSubmitted, setLeadSubmitted] = useState<boolean>(false);\n  const [submittingLead, setSubmittingLead] = useState<boolean>(false);\n  const [leadForm, setLeadForm] = useState({ name: \"\", email: \"\", phone: \"\" });\n  const [submittedLeadData, setSubmittedLeadData] = useState<any>(null);"

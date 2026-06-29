@@ -1,0 +1,11 @@
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="inline-flex items-center bg-emerald-50 text-emerald-800 border border-emerald-100 text-[9px] px-2.5 py-1 rounded-md font-extrabold uppercase tracking-widest mb-2.5">
+                            🌟 YOUR RECOMMENDED BEST MATCH
+                          </span>
+                          <h4 className="text-2xl font-extrabold text-[#00338D] tracking-tight">{matchedPlan.name}</h4>
+                          <p className="text-xs text-slate-555 font-bold italic mt-1 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100/30">
+                            " {recommendation.whyExplanation} "
+                          </p>
+                        </div>
+                      </div>

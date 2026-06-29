@@ -1,0 +1,65 @@
+Created At: 2026-06-21T13:08:33Z
+Completed At: 2026-06-21T13:08:33Z
+
+				The command completed successfully.
+				Output:
+				<truncated 1721 lines>
++
++                            {/* What's Included (Bullet points only, no clumps) */}
++                            <div className="space-y-3.5">
++                              <h5 className="text-xs font-black uppercase tracking-widest text-slate-600 border-b border-slate-150 pb-2">
++                                Benefit specifications (Compare side-by-side)
++                              </h5>
++                              
++                              <ul className="space-y-2.5 text-xs">
++                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
++                                  <span className="text-slate-500 font-bold shrink-0">🛡️ Max Coverage:</span>
++                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.coverage} sum insured protection</span>
++                                </li>
++                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
++                                  <span className="text-slate-500 font-bold shrink-0">🛏️ Room Allotment:</span>
++                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.roomRent}</span>
++                                </li>
++                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border border-slate-200 transition">
++                                  <span className="text-slate-500 font-bold shrink-0">⏱️ Waiting Period:</span>
++                                  <span className="text-slate-700 leading-normal font-semibold">{comparedPlan.waitingPeriod}</span>
++                                </li>
++                                <li className="flex items-start gap-2.5 bg-white p-2.5 rounded-lg border borde
+<truncated 4218 bytes>
+lassName="text-left space-y-1 max-w-xl">
++                    <h4 className="font-extrabold text-[#00338D] text-lg">Would you like to lock this protective shield in?</h4>
++                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
++                      All estimates are calibrated against Star Health's public regulatory brochures. Book now to bypass standard medical tests and secure immediate 15-minute callback clearance.
++                    </p>
++                  </div>
++                  <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto shrink-0">
++                    <a 
++                      href={`https://wa.me/911234567890?text=Hi%2C%20Star%20Health%21%20I%20just%20completed%20the%20AI%20Advising%20Discovery.%20I%20have%20chosen%20the%20${matchedPlan?.name}%20at%20%E2%82%B9${recommendation?.monthlyPremium}/month.%20Please%20verify%20and%20lock%20this%20in.`}
++                      target="_blank"
++                      rel="noopener noreferrer"
++                      className="px-6 py-3.5 bg-green-600 hover:bg-green-700 text-white font-extrabold rounded-xl text-xs transition text-center shadow-lg shadow-green-600/10"
++                    >
++                      💬 Book plan via WhatsApp Call
++                    </a>
++                    <button 
++                      onClick={() => {
++                        alert(`Thank you! Our human verification desk has logged your current configuration: ${matchedPlan?.name}. We will reach out on your linked email in 15 minutes!`);
++                      }}
++                      className="px-6 py-3.5 bg-star-red hover:bg-red-700 text-white font-extrabold rounded-xl text-xs transition shadow-lg shadow-red-500/10 cursor-pointer"
++                    >
++                      ☎️ Request Instant Callback
++                    </button>
++                  </div>
++                </div>
++
++              </motion.div>
++            )}
++          </AnimatePresence>
++
++        </div>
++
++      </div>
++    </div>
++  );
++}
+

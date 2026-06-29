@@ -1,0 +1,50 @@
+    setSendingWhatsapp(false);
+  };
+
+  // VOIP State Variables
+  const [voipActive, setVoipActive] = useState(false);
+  const [voipStatus, setVoipStatus] = useState<"idle" | "connecting" | "connected" | "speaking" | "listening">("idle");
+  const [conversationId, setConversationId] = useState("");
+  const [conversationInstance, setConversationInstance] = useState<any>(null);
+
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+    try {
+      // 1. Fetch the secure signed URL from the web backend
+      const res = await fetch("/api/signed-url");
+      if (!res.ok) {
+        throw new Error("Failed to get session signed URL");
+      }
+      const { signed_url } = await res.json();
+
+      // 2. Start the ElevenLabs Conversation session
+      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
+      
+      console.log(`Starting VOIP call for policy: ${policyName}`);
+      const conv = await Conversation.startSession({
+        signedUrl: signed_url,
+        dynamicVariables: {
+          policy: policyName
+        },
+        onConnect: async ({ conversationId }) => {
+          console.log("VOIP call connected! Conversation ID:", conversationId);
+          setConversationId(conversationId);
+          setVoipStatus("connected");
+
+          // 3. Link the conversation ID to our database lead
+          if (submittedLeadData?.id) {
+            try {
+              await fetch("/api/register-conversation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  leadId: submittedLeadData.id,
+                  conversationId: conversationId
+                })
+              });
+            } catch (err) {
+              console.error("Failed to register conversation in database:", err);
+   

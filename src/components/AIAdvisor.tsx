@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle,
   Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
-  Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2
+  Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
+  Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
 } from "lucide-react";
+import { Conversation } from "@elevenlabs/client";
 import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
 
 const COMMON_AILMENTS_LIST = [
@@ -97,7 +99,13 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
   const [leadsLoading, setLeadsLoading] = useState<boolean>(false);
   const [leadSubmitted, setLeadSubmitted] = useState<boolean>(false);
   const [submittingLead, setSubmittingLead] = useState<boolean>(false);
-  const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "" });
+  const [leadForm, setLeadForm] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    gender?: string;
+    scheduledCallAt?: string;
+  }>({ name: "", email: "", phone: "", gender: "" });
   const [submittedLeadData, setSubmittedLeadData] = useState<any>(null);
   const [consentChecked, setConsentChecked] = useState<boolean>(false);
   const [showValidationErrors, setShowValidationErrors] = useState<boolean>(false);
@@ -419,8 +427,8 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
   };
 
   const runRecommendation = async () => {
-    // Validate required fields (Name and Phone) and consent checkbox
-    if (!leadForm.name.trim() || !leadForm.phone.trim() || !consentChecked) {
+    // Validate required fields (Name, Phone, and Gender) and consent checkbox
+    if (!leadForm.name.trim() || !leadForm.phone.trim() || !leadForm.gender || !consentChecked) {
       setShowValidationErrors(true);
       return;
     }
@@ -540,11 +548,246 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
 
   const matchedPlan = getMatchedPlan();
 
+  const [callScheduledConfirmed, setCallScheduledConfirmed] = useState(false);
+
+  const confirmScheduleCall = async () => {
+    if (!submittedLeadData || !submittedLeadData.id || !leadForm.scheduledCallAt) return;
+    try {
+      const res = await fetch("/api/update-lead-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: submittedLeadData.id,
+          call_status: 'scheduled',
+          scheduled_call_at: leadForm.scheduledCallAt
+        })
+      });
+      if (res.ok) {
+        setCallScheduledConfirmed(true);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const [whatsappSent, setWhatsappSent] = useState(false);
+  const [sendingWhatsapp, setSendingWhatsapp] = useState(false);
+
+  const handleSendWhatsapp = async () => {
+    if (!submittedLeadData || !submittedLeadData.id) return;
+    setSendingWhatsapp(true);
+    try {
+      const res = await fetch("/api/send-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: submittedLeadData.id,
+          phone: leadForm.phone,
+          name: leadForm.name || "Customer",
+          recommended_plan_id: recommendation?.recommendedPlanId || plans[0].id
+        })
+      });
+      if (res.ok) {
+        setWhatsappSent(true);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setSendingWhatsapp(false);
+  };
+
+  // VOIP State Variables
+  const [voipActive, setVoipActive] = useState(false);
+  const [voipStatus, setVoipStatus] = useState<"idle" | "connecting" | "connected" | "speaking" | "listening">("idle");
+  const [conversationId, setConversationId] = useState("");
+  const [conversationInstance, setConversationInstance] = useState<any>(null);
+
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+
+    // Check if browser is in a secure context (localhost or https) allowing media devices access
+    if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Microphone access is disabled. Please ensure you are accessing the page via 'http://localhost:3000' or 'http://127.0.0.1:3000' (browsers restrict microphone access to localhost or HTTPS).");
+      return;
+    }
+
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+    try {
+      // 1. Attempt to fetch the secure signed URL from the web backend
+      let signed_url: string | null = null;
+      let fallbackAgentId = "agent_9101kvjj8g1cecatsrr130tgv6rn";
+      try {
+        const res = await fetch("/api/signed-url");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.usePublicAgent) {
+            console.log("Backend recommended using public agent directly.");
+            fallbackAgentId = data.agentId || fallbackAgentId;
+          } else {
+            signed_url = data.signed_url;
+          }
+        } else {
+          console.warn("Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.");
+        }
+      } catch (err) {
+        console.warn("Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:", err);
+      }
+
+      // 2. Start the ElevenLabs Conversation session
+      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
+      const customerName = leadForm.name || "Customer";
+
+      let designation = "Sir / Ma'am";
+      if (submittedLeadData?.gender === "male") designation = "Sir";
+      else if (submittedLeadData?.gender === "female") designation = "Ma'am";
+
+      console.log(`Starting VOIP call for policy: ${policyName}, customer: ${customerName}, designation: ${designation}`);
+
+      const triggerWhatsAppSend = async () => {
+        try {
+          const phoneToUse = leadForm.phone || submittedLeadData?.phone || "";
+          const nameToUse = leadForm.name || submittedLeadData?.name || "Customer";
+          const leadIdToUse = submittedLeadData?.id || "";
+          const planIdToUse = recommendation?.recommendedPlanId || matchedPlan?.id || plans[0].id;
+
+          if (!phoneToUse) {
+            console.warn("Cannot send WhatsApp: phone number is missing.");
+            return { success: false, error: "Phone number is missing." };
+          }
+
+          const res = await fetch("/api/send-whatsapp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lead_id: leadIdToUse,
+              phone: phoneToUse,
+              name: nameToUse,
+              recommended_plan_id: planIdToUse
+            })
+          });
+          if (res.ok) {
+            setWhatsappSent(true);
+            return { success: true, message: "WhatsApp message sent successfully" };
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            return { success: false, error: errData.error || "Failed to send WhatsApp message" };
+          }
+        } catch (err: any) {
+          console.error("Error in triggerWhatsAppSend helper:", err);
+          return { success: false, error: err.message };
+        }
+      };
+
+      const sessionParams: any = {
+        dynamicVariables: {
+          policy: policyName,
+          policyName: policyName,
+          policy_name: policyName,
+          recommended_plan: policyName,
+          recommended_policy: policyName,
+          recommended_plan_name: policyName,
+          customer_name: customerName,
+          customerName: customerName,
+          name: customerName,
+          user_name: customerName,
+          userName: customerName,
+          designation: designation,
+          designationName: designation,
+          designation_name: designation
+        },
+        clientTools: {
+          sendWhatsAppDetails: async (args: any) => {
+            console.log("ElevenLabs Agent triggered sendWhatsAppDetails with args:", args);
+            return await triggerWhatsAppSend();
+          },
+          send_whatsapp: async (args: any) => {
+            console.log("ElevenLabs Agent triggered send_whatsapp with args:", args);
+            return await triggerWhatsAppSend();
+          },
+          send_details_over_whatsapp: async (args: any) => {
+            console.log("ElevenLabs Agent triggered send_details_over_whatsapp with args:", args);
+            return await triggerWhatsAppSend();
+          },
+          sendDetailsOverWhatsApp: async (args: any) => {
+            console.log("ElevenLabs Agent triggered sendDetailsOverWhatsApp with args:", args);
+            return await triggerWhatsAppSend();
+          },
+          send_whatsapp_details: async (args: any) => {
+            console.log("ElevenLabs Agent triggered send_whatsapp_details with args:", args);
+            return await triggerWhatsAppSend();
+          }
+        },
+        onConnect: async ({ conversationId }: { conversationId: string }) => {
+          console.log("VOIP call connected! Conversation ID:", conversationId);
+          setConversationId(conversationId);
+          setVoipStatus("connected");
+
+          // 3. Link the conversation ID to our database lead
+          if (submittedLeadData?.id) {
+            try {
+              await fetch("/api/register-conversation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  leadId: submittedLeadData.id,
+                  conversationId: conversationId
+                })
+              });
+            } catch (err) {
+              console.error("Failed to register conversation in database:", err);
+            }
+          }
+        },
+        onError: (err: any) => {
+          console.error("VOIP call error:", err);
+          alert("VOIP call error callback: " + (err.message || JSON.stringify(err)));
+          setVoipStatus("idle");
+          setVoipActive(false);
+          setConversationInstance(null);
+        },
+        onModeChange: ({ mode }: { mode: "speaking" | "listening" }) => {
+          setVoipStatus(mode);
+        }
+      };
+
+      if (signed_url) {
+        console.log("Connecting using secure signed URL from backend.");
+        sessionParams.signedUrl = signed_url;
+      } else {
+        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+        sessionParams.agentId = fallbackAgentId;
+      }
+
+      const conv = await Conversation.startSession(sessionParams);
+      setConversationInstance(conv);
+    } catch (err: any) {
+      console.error("Error starting VOIP session:", err);
+      alert("Error starting VOIP session: " + (err.message || err));
+      setVoipStatus("idle");
+      setVoipActive(false);
+    }
+  };
+
+  const handleEndVoipCall = async () => {
+    if (conversationInstance) {
+      try {
+        await conversationInstance.endSession();
+      } catch (err) {
+        console.error("Error ending VOIP session:", err);
+      }
+    }
+    setVoipStatus("idle");
+    setVoipActive(false);
+    setConversationInstance(null);
+  };
+
   return (
     <div id="ai-advisor-section" className="py-12 lg:py-20 border-t border-slate-200 bg-blue-50/30 text-slate-900 relative">
       <div className="absolute top-10 right-10 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-40 pointer-events-none" />
 
-      <div className={`mx-auto px-4 sm:px-6 transition-all duration-500 ${recommendation ? "max-w-6xl" : "max-w-4xl"} relative`}>
+      <div className={`mx-auto px-4 sm:px-6 transition-all duration-500 ${recommendation ? "max-w-7xl" : "max-w-5xl"} relative`}>
 
 
 
@@ -655,10 +898,10 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                           </div>
                           <span
                             className={`text-xs font-bold leading-none transition-colors duration-300 ${isCompleted
-                                ? "text-emerald-400/90 line-through decoration-emerald-500/40"
-                                : isActive
-                                  ? "text-amber-400 font-extrabold"
-                                  : "text-slate-500"
+                              ? "text-emerald-400/90 line-through decoration-emerald-500/40"
+                              : isActive
+                                ? "text-amber-400 font-extrabold"
+                                : "text-slate-500"
                               }`}
                           >
                             {stepText}
@@ -1233,6 +1476,35 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                               )}
                             </div>
 
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-650 block">Gender <span className="text-red-500">*</span></label>
+                              <div className="flex gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setLeadForm(prev => ({ ...prev, gender: "male" }))}
+                                  className={`flex-1 py-3 px-4 rounded-xl border text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer ${leadForm.gender === "male"
+                                      ? "border-[#00338D] bg-blue-50/50 text-[#00338D]"
+                                      : "border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"
+                                    }`}
+                                >
+                                  <span>Male</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setLeadForm(prev => ({ ...prev, gender: "female" }))}
+                                  className={`flex-1 py-3 px-4 rounded-xl border text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer ${leadForm.gender === "female"
+                                      ? "border-[#00338D] bg-blue-50/50 text-[#00338D]"
+                                      : "border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"
+                                    }`}
+                                >
+                                  <span>Female</span>
+                                </button>
+                              </div>
+                              {showValidationErrors && !leadForm.gender && (
+                                <p className="text-[10px] text-red-600 font-bold mt-1">Please select your gender.</p>
+                              )}
+                            </div>
+
                             {/* DPDP Privacy compliance Notice */}
                             <div className="p-3.5 bg-blue-50/50 border border-blue-100 rounded-2xl text-left space-y-1.5 shadow-sm">
                               <div className="flex items-center gap-1.5 text-slate-800 text-xs font-black">
@@ -1389,12 +1661,66 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                           <div className="absolute top-0 left-0 right-0 h-1.5 bg-emerald-500" />
 
                           <div className="flex justify-between items-start">
-                            <div>
+                            <div className="w-full text-left">
                               <span className="inline-flex items-center bg-emerald-50 text-emerald-800 border border-emerald-100 text-[9px] px-2.5 py-1 rounded-md font-extrabold uppercase tracking-widest mb-2.5">
                                 🌟 YOUR RECOMMENDED BEST MATCH
                               </span>
-                              <h4 className="text-2xl font-extrabold text-[#00338D] tracking-tight">{matchedPlan.name}</h4>
-                              <p className="text-xs text-slate-505 font-bold italic mt-1 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100/30">
+
+                              <div className="flex justify-between items-start w-full gap-4">
+                                <h4 className="text-2xl font-extrabold text-[#00338D] tracking-tight">{matchedPlan.name}</h4>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button
+                                    onClick={handleSendWhatsapp}
+                                    disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}
+                                    className={`p-2 rounded-full transition cursor-pointer disabled:opacity-50 ${whatsappSent ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                                    title="Send details to WhatsApp"
+                                  >
+                                    {whatsappSent ? <CheckCircle2 className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+                                  </button>
+                                  <div className="relative group/scheduler">
+                                    <button className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition cursor-pointer" title="Schedule Call">
+                                      <Calendar className="w-5 h-5" />
+                                    </button>
+                                    <div className="absolute top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl p-4 shadow-xl z-20 hidden group-hover/scheduler:block focus-within:block right-0">
+                                      <div className="text-[11px] font-bold text-slate-700 mb-3 uppercase tracking-wider text-left">Schedule AI Advisor Call</div>
+                                      {!callScheduledConfirmed ? (
+                                        <div className="flex flex-col gap-2 text-left">
+                                          <input
+                                            type="datetime-local"
+                                            value={leadForm.scheduledCallAt || ""}
+                                            onChange={(e) => setLeadForm(prev => ({ ...prev, scheduledCallAt: e.target.value }))}
+                                            className="text-xs border border-slate-200 rounded p-1.5 w-full bg-slate-50 focus:outline-none focus:border-blue-500 font-medium"
+                                          />
+                                          <button
+                                            onClick={confirmScheduleCall}
+                                            disabled={!leadForm.scheduledCallAt}
+                                            className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded text-[10px] transition duration-150 cursor-pointer disabled:opacity-50"
+                                          >
+                                            Confirm Slot
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="text-left">
+                                          <div className="text-[10px] font-bold text-emerald-700 mb-2 flex items-center gap-1">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                            <span>Slot Scheduled!</span>
+                                          </div>
+                                          <a
+                                            href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Star+Health+Insurance+Consultation&details=Discussing+your+health+insurance+needs+and+the+${matchedPlan?.name}+plan.&dates=${leadForm.scheduledCallAt ? new Date(leadForm.scheduledCallAt).toISOString().replace(/-|:|\.\d\d\d/g, "") : ""}/${leadForm.scheduledCallAt ? new Date(new Date(leadForm.scheduledCallAt).getTime() + 30 * 60000).toISOString().replace(/-|:|\.\d\d\d/g, "") : ""}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded text-[9px] font-extrabold text-blue-700 hover:bg-blue-100 transition cursor-pointer shadow-sm w-full"
+                                          >
+                                            📅 Add to Calendar
+                                          </a>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-505 font-bold italic mt-2 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100/30">
                                 " {recommendation.whyExplanation} "
                               </p>
                             </div>
@@ -1458,6 +1784,120 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                                 </li>
                               ))}
                             </ul>
+                          </div>
+
+                          {/* Want to know more? */}
+                          <div className="pt-2">
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+                              <h4 className="text-sm font-black text-blue-900 mb-1">Want to know more?</h4>
+                              <p className="text-xs text-blue-700 font-medium mb-3">
+                                We will send you the complete policy details over WhatsApp, and you can chat with our AI agent to explore more.
+                              </p>
+                              <div className="space-y-2 text-left">
+                                <button
+                                  onClick={handleSendWhatsapp}
+                                  disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}
+                                  className="w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  {sendingWhatsapp ? "Sending Details..." : whatsappSent ? "Sent to WhatsApp!" : "Send details to WhatsApp"}
+                                </button>
+
+                                {/* Callback Scheduler & Google Calendar template */}
+                                {!callScheduledConfirmed ? (
+                                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                                    <input
+                                      type="datetime-local"
+                                      value={leadForm.scheduledCallAt || ""}
+                                      onChange={(e) => setLeadForm(prev => ({ ...prev, scheduledCallAt: e.target.value }))}
+                                      className="flex-1 text-xs border border-blue-200 rounded-lg p-2 bg-white focus:outline-none focus:border-blue-500 font-medium"
+                                    />
+                                    <button
+                                      onClick={confirmScheduleCall}
+                                      disabled={!leadForm.scheduledCallAt}
+                                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                                    >
+                                      <Calendar className="w-4 h-4" />
+                                      <span>Schedule Call</span>
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="bg-white border border-emerald-100 rounded-lg p-2.5 mt-1 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
+                                    <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1.5">
+                                      ✅ Call Confirmed
+                                    </span>
+                                    <a
+                                      href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Star+Health+Insurance+Consultation&details=Discussing+your+health+insurance+needs+and+the+${matchedPlan?.name}+plan.&dates=${leadForm.scheduledCallAt ? new Date(leadForm.scheduledCallAt).toISOString().replace(/-|:|\.\d\d\d/g, "") : ""}/${leadForm.scheduledCallAt ? new Date(new Date(leadForm.scheduledCallAt).getTime() + 30 * 60000).toISOString().replace(/-|:|\.\d\d\d/g, "") : ""}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded text-[10px] font-extrabold text-blue-700 hover:bg-blue-100 transition cursor-pointer shadow-sm w-max"
+                                    >
+                                      📅 Add to Calendar
+                                    </a>
+                                  </div>
+                                )}
+
+                                {voipActive ? (
+                                  <div className="bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800">
+                                    <div className="flex justify-between items-center">
+                                      <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                                        <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest">
+                                          {voipStatus === "connecting" ? "Establishing WebRTC..." : "VOIP Call Active"}
+                                        </span>
+                                      </div>
+                                      <span className="text-[9px] text-slate-500 font-bold tracking-tight">Latency ~20ms (Direct VOIP)</span>
+                                    </div>
+
+                                    <div className="flex flex-col items-center justify-center py-4 space-y-3">
+                                      {/* Audio Visualizer Waves */}
+                                      <div className="flex items-center gap-1.5 h-8">
+                                        {[1, 2, 3, 4, 5, 6, 7].map((bar) => {
+                                          let heightClass = "h-2";
+                                          if (voipStatus === "speaking") {
+                                            if (bar % 3 === 0) heightClass = "h-7 animate-pulse";
+                                            else if (bar % 2 === 0) heightClass = "h-5 animate-pulse delay-75";
+                                            else heightClass = "h-3 animate-pulse delay-150";
+                                          } else if (voipStatus === "listening") {
+                                            if (bar % 2 === 0) heightClass = "h-4 animate-ping";
+                                            else heightClass = "h-2";
+                                          } else if (voipStatus === "connected") {
+                                            if (bar === 4) heightClass = "h-4";
+                                            else heightClass = "h-2";
+                                          } else if (voipStatus === "connecting") {
+                                            heightClass = "h-2 animate-bounce";
+                                          }
+                                          return (
+                                            <div
+                                              key={bar}
+                                              className={`w-1 bg-emerald-400 rounded-full transition-all duration-150 ${heightClass}`}
+                                            />
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+
+                                    <button
+                                      onClick={handleEndVoipCall}
+                                      className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-red-900/10"
+                                    >
+                                      <PhoneOff className="w-4 h-4" />
+                                      <span>End Direct Call</span>
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={handleStartVoipCall}
+                                    disabled={!leadForm.phone}
+                                    className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold rounded-lg text-xs transition duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md relative overflow-hidden group disabled:opacity-50"
+                                  >
+                                    <span className="absolute inset-0 w-full h-full bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                                    <Mic className="w-4 h-4 animate-pulse" />
+                                    <span>Speak to Advisor Instantly (VOIP Call)</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
 
                         </div>
@@ -1786,7 +2226,7 @@ function Confetti() {
     const timeoutId = setTimeout(() => {
       cancelAnimationFrame(animationFrameId);
       ctx.clearRect(0, 0, width, height);
-    }, 6000);
+    }, 3000);
 
     return () => {
       window.removeEventListener("resize", handleResize);

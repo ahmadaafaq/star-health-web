@@ -1,0 +1,74 @@
+Created At: 2026-06-21T09:36:40Z
+Completed At: 2026-06-21T09:36:40Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/server.ts`
+Total Lines: 746
+Total Bytes: 31065
+Showing lines 520 to 585
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+520:           phone: targetPhone,
+521:           name: targetName,
+522:           lead_id: targetId,
+523:           recommended_plan_id: planId || null
+524:         })
+525:       }).then(async (response) => {
+526:         if (response.ok) {
+527:           const resJson = await response.json();
+528:           console.log(`Welcome message response status:`, resJson);
+529:         } else {
+530:           console.error(`Failed to send welcome message:`, response.statusText);
+531:         }
+532:       }).catch((err) => {
+533:         console.error("Error calling send-welcome endpoint:", err);
+534:       });
+535:     }
+536: 
+537:     res.json({ success: true, lead: data[0] });
+538:   } catch (error: any) {
+539:     console.error("Lead submission endpoint error:", error);
+540:     res.status(500).json({ error: "Could not submit lead" });
+541:   }
+542: });
+543: 
+544: // Endpoint to explicitly send policy details via WhatsApp
+545: app.post("/api/send-whatsapp", async (req, res) => {
+546:   try {
+547:     const { lead_id, phone, name, recommended_plan_id } = req.body;
+548:     if (!phone || !name) {
+549:       return res.status(400).json({ error: "Missing phone or name" });
+550:     }
+551: 
+552:     // Optionally update the DB status to indicate it was sent
+553:     await supabaseClient
+554:       .from('leads')
+555:       .update({ whatsapp_consent: true })
+556:       .eq('id', lead_id);
+557: 
+558:     // Make asynchronous request to Python backend
+559:     const response = await fetch(`${RAG_API_URL}/send-welcome`, {
+560:       method: "POST",
+561:       headers: { "Content-Type": "application/json" },
+562:       body: JSON.stringify({
+563:         phone: phone,
+564:         name: name,
+565:         lead_id: lead_id,
+566:         recommended_plan_id: recommended_plan_id || null
+567:       })
+568:     });
+569: 
+570:     if (response.ok) {
+571:       res.json({ success: true, message: "WhatsApp message triggered" });
+572:     } else {
+573:       res.status(500).json({ error: "Failed to send WhatsApp message" });
+574:     }
+575:   } catch (error: any) {
+576:     console.error("Send WhatsApp endpoint error:", error);
+577:     res.status(500).json({ error: "Could not trigger WhatsApp message" });
+578:   }
+579: });
+580: 
+581: // Endpoint to request a secure signed URL from ElevenLabs for browser VOIP calls
+582: app.get("/api/signed-url", async (req, res) => {
+583:   try {
+584:     const agentId = process.env.ELEVENLABS_AGENT_ID || "agent_9101kvjj8g1cecatsrr130tgv6rn";
+585:     const apiKey = process.env.ELEVENLABS_API_KEY;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

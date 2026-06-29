@@ -1,0 +1,78 @@
+Created At: 2026-06-21T11:53:38Z
+Completed At: 2026-06-21T11:53:38Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx`
+Total Lines: 1853
+Total Bytes: 107984
+Showing lines 450 to 565
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+450:                   leadId: submittedLeadData.id,
+451:                   conversationId: conversationId
+452:                 })
+453:               });
+454:             } catch (err) {
+455:               console.error("Failed to register conversation in database:", err);
+456:             }
+457:           }
+458:         },
+459:         onDisconnect: () => {
+460:           console.log("VOIP call disconnected.");
+461:           setVoipStatus("idle");
+462:           setVoipActive(false);
+463:           setConversationInstance(null);
+464:         },
+465:         onError: (err: any) => {
+466:           console.error("VOIP call error:", err);
+467:           alert("VOIP call error callback: " + (err.message || JSON.stringify(err)));
+468:           setVoipStatus("idle");
+469:           setVoipActive(false);
+470:           setConversationInstance(null);
+471:         },
+472:         onModeChange: ({ mode }: { mode: "speaking" | "listening" }) => {
+473:           setVoipStatus(mode);
+474:         }
+475:       };
+476: 
+477:       if (signed_url) {
+478:         console.log("Connecting using secure signed URL from backend.");
+479:         sessionParams.signedUrl = signed_url;
+480:       } else {
+481:         console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+482:         sessionParams.agentId = fallbackAgentId;
+483:       }
+484: 
+485:       const conv = await Conversation.startSession(sessionParams);
+486:       setConversationInstance(conv);
+487:     } catch (err: any) {
+488:       console.error("Error st
+<truncated 2269 bytes>
+x-w-lg mx-auto text-sm leading-relaxed font-medium">
+537:             Tired of corporate jargon? Tell us who you wish to protect and Star AI will engineer the precise coverage configuration.
+538:           </p>
+539:         </div>
+540: 
+541:         {/* Wizard Card Body */}
+542:         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden min-h-[480px]">
+543: 
+544:           {/* Confetti effect when recommendation is ready */}
+545:           {recommendation && <Confetti />}
+546: 
+547:           <AnimatePresence mode="wait">
+548:             {!recommendation ? (
+549:               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+550: 
+551:                 {/* Left Column: Moral Narrative Panel */}
+552:                 <div className="lg:col-span-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden border border-slate-800 shadow-lg min-h-[300px]">
+553:                   {/* Background decoration glow */}
+554:                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
+555:                   <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+556: 
+557:                   <div className="my-auto">
+558:                     <AnimatePresence mode="wait">
+559:                       <motion.div
+560:                         key={`narration-side-${step}`}
+561:                         initial={{ opacity: 0, x: -15 }}
+562:                         animate={{ opacity: 1, x: 0 }}
+563:                         exit={{ opacity: 0, x: 15 }}
+564:                         transition={{ duration: 0.25 }}
+565:                         className="space-y-6"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

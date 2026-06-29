@@ -1,0 +1,683 @@
+==================================================
+STEP 132 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+import { 
+  ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle, 
+  Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
+  Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
+  Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
+} from "lucide-react";
+import { Conversation } from "@elevenlabs/client";
+import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
+
+
+
+==================================================
+STEP 132 TC 0 SUFFIX replacement.txt
+==================================================
+import { 
+  ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle, 
+  Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
+  Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
+  Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
+} from "lucide-react";
+import { Conversation } from "@elevenlabs/client";
+import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
+
+
+
+==================================================
+STEP 134 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+"    setSendingWhatsapp(false);\n  };\n\n  // VOIP State Variables\n  const [voipActive, setVoipActive] = useState(false);\n  const [voipStatus, setVoipStatus] = useState<\"idle\" | \"connecting\" | \"connected\" | \"speaking\" | \"listening\">(\"idle\");\n  const [conversationId, setConversationId] = useState(\"\");\n  const [conversationInstance, setConversationInstance] = useState<any>(null);\n\n  const handleStartVoipCall = async () => {\n    if (voipActive) return;\n    setVoipStatus(\"connecting\");\n    setVoipActive(true);\n\n    try {\n      // 1. Fetch the secure signed URL from the web backend\n      const res = await fetch(\"/api/signed-url\");\n      if (!res.ok) {\n        throw new Error(\"Failed to get session signed URL\");\n      }\n      const { signed_url } = await res.json();\n\n      // 2. Start the ElevenLabs Conversation session\n      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || \"Family Health Optima\";\n      \n      console.log(`Starting VOIP call for policy: ${policyName}`);\n      const conv = await Conversation.startSession({\n        signedUrl: signed_url,\n        dynamicVariables: {\n          policy: policyName\n        },\n        onConnect: async ({ conversationId }) => {\n          console.log(\"VOIP call connected! Conversation ID:\", conversationId);\n          setConversationId(conversationId);\n          setVoipStatus(\"connected\");\n\n          // 3. Link the conversation ID to our database lead\n          if (submittedLeadData?.id) {\n            try {\n              await fetch(\"/api/register-conversation\", {\n                method: \"POST\",\n                headers: { \"Content-Type\": \"application/json\" },\n                body: JSON.stringify({\n                  leadId: submittedLeadData.id,\n                  conversationId: conversationId\n                })\n              });\n            } catch (err) {\n              console.error(\"Failed to register conversation in database:\", err);\n   
+<truncated 1077 bytes>
+
+
+
+==================================================
+STEP 134 TC 0 SUFFIX replacement.txt
+==================================================
+"    setSendingWhatsapp(false);\n  };\n\n  // VOIP State Variables\n  const [voipActive, setVoipActive] = useState(false);\n  const [voipStatus, setVoipStatus] = useState<\"idle\" | \"connecting\" | \"connected\" | \"speaking\" | \"listening\">(\"idle\");\n  const [conversationId, setConversationId] = useState(\"\");\n  const [conversationInstance, setConversationInstance] = useState<any>(null);\n\n  const handleStartVoipCall = async () => {\n    if (voipActive) return;\n    setVoipStatus(\"connecting\");\n    setVoipActive(true);\n\n    try {\n      // 1. Fetch the secure signed URL from the web backend\n      const res = await fetch(\"/api/signed-url\");\n      if (!res.ok) {\n        throw new Error(\"Failed to get session signed URL\");\n      }\n      const { signed_url } = await res.json();\n\n      // 2. Start the ElevenLabs Conversation session\n      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || \"Family Health Optima\";\n      \n      console.log(`Starting VOIP call for policy: ${policyName}`);\n      const conv = await Conversation.startSession({\n        signedUrl: signed_url,\n        dynamicVariables: {\n          policy: policyName\n        },\n        onConnect: async ({ conversationId }) => {\n          console.log(\"VOIP call connected! Conversation ID:\", conversationId);\n          setConversationId(conversationId);\n          setVoipStatus(\"connected\");\n\n          // 3. Link the conversation ID to our database lead\n          if (submittedLeadData?.id) {\n            try {\n              await fetch(\"/api/register-conversation\", {\n                method: \"POST\",\n                headers: { \"Content-Type\": \"application/json\" },\n                body: JSON.stringify({\n                  leadId: submittedLeadData.id,\n                  conversationId: conversationId\n                })\n              });\n            } catch (err) {\n              console.error(\"Failed to register conversation in database:\", err);\n   
+<truncated 1077 bytes>
+
+
+
+==================================================
+STEP 134 TC 0 SUFFIX clean.txt
+==================================================
+    setSendingWhatsapp(false);
+  };
+
+  // VOIP State Variables
+  const [voipActive, setVoipActive] = useState(false);
+  const [voipStatus, setVoipStatus] = useState<"idle" | "connecting" | "connected" | "speaking" | "listening">("idle");
+  const [conversationId, setConversationId] = useState("");
+  const [conversationInstance, setConversationInstance] = useState<any>(null);
+
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+    try {
+      // 1. Fetch the secure signed URL from the web backend
+      const res = await fetch("/api/signed-url");
+      if (!res.ok) {
+        throw new Error("Failed to get session signed URL");
+      }
+      const { signed_url } = await res.json();
+
+      // 2. Start the ElevenLabs Conversation session
+      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
+      
+      console.log(`Starting VOIP call for policy: ${policyName}`);
+      const conv = await Conversation.startSession({
+        signedUrl: signed_url,
+        dynamicVariables: {
+          policy: policyName
+        },
+        onConnect: async ({ conversationId }) => {
+          console.log("VOIP call connected! Conversation ID:", conversationId);
+          setConversationId(conversationId);
+          setVoipStatus("connected");
+
+          // 3. Link the conversation ID to our database lead
+          if (submittedLeadData?.id) {
+            try {
+              await fetch("/api/register-conversation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  leadId: submittedLeadData.id,
+                  conversationId: conversationId
+                })
+              });
+            } catch (err) {
+              console.error("Failed to register conversation in database:", err);
+   
+
+
+
+==================================================
+STEP 140 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+"                            <button\n                              onClick={handleSendWhatsapp}\n                              disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}\n                              className=\"w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50\"\n                            >\n                              <MessageCircle className=\"w-4 h-4\" />\n                              {sendingWhatsapp ? \"Sending Details...\" : whatsappSent ? \"Sent to WhatsApp!\" : \"Send details to WhatsApp\"}\n                            </button>\n\n                            {voipActive ? (\n                              <div className=\"bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800\">\n                                <div className=\"flex justify-between items-center\">\n                                  <div className=\"flex items-center gap-2\">\n                                    <span className=\"w-2 h-2 bg-emerald-500 rounded-full animate-ping\"></span>\n                                    <span className=\"text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest\">\n                                      {voipStatus === \"connecting\" ? \"Establishing WebRTC...\" : \"VOIP Call Active\"}\n                                    </span>\n                                  </div>\n                                  <span className=\"text-[9px] text-slate-500 font-bold tracking-tight\">Latency ~20ms (Direct VOIP)</span>\n                                </div>\n                                \n                                <div className=\"flex flex-col items-center justify-center py-4 space-y-3\">\n                                  {/* Audio Visualizer Waves */}\n                                  <div className=\"flex items-center gap-1.5 h-8\">\n                                    {[1, 2, 3, 4, 5, 6, 7
+<truncated 3198 bytes>
+
+
+
+==================================================
+STEP 140 TC 0 SUFFIX replacement.txt
+==================================================
+"                            <button\n                              onClick={handleSendWhatsapp}\n                              disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}\n                              className=\"w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50\"\n                            >\n                              <MessageCircle className=\"w-4 h-4\" />\n                              {sendingWhatsapp ? \"Sending Details...\" : whatsappSent ? \"Sent to WhatsApp!\" : \"Send details to WhatsApp\"}\n                            </button>\n\n                            {voipActive ? (\n                              <div className=\"bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800\">\n                                <div className=\"flex justify-between items-center\">\n                                  <div className=\"flex items-center gap-2\">\n                                    <span className=\"w-2 h-2 bg-emerald-500 rounded-full animate-ping\"></span>\n                                    <span className=\"text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest\">\n                                      {voipStatus === \"connecting\" ? \"Establishing WebRTC...\" : \"VOIP Call Active\"}\n                                    </span>\n                                  </div>\n                                  <span className=\"text-[9px] text-slate-500 font-bold tracking-tight\">Latency ~20ms (Direct VOIP)</span>\n                                </div>\n                                \n                                <div className=\"flex flex-col items-center justify-center py-4 space-y-3\">\n                                  {/* Audio Visualizer Waves */}\n                                  <div className=\"flex items-center gap-1.5 h-8\">\n                                    {[1, 2, 3, 4, 5, 6, 7
+<truncated 3198 bytes>
+
+
+
+==================================================
+STEP 140 TC 0 SUFFIX clean.txt
+==================================================
+                            <button
+                              onClick={handleSendWhatsapp}
+                              disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}
+                              className="w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              {sendingWhatsapp ? "Sending Details..." : whatsappSent ? "Sent to WhatsApp!" : "Send details to WhatsApp"}
+                            </button>
+
+                            {voipActive ? (
+                              <div className="bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                                    <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest">
+                                      {voipStatus === "connecting" ? "Establishing WebRTC..." : "VOIP Call Active"}
+                                    </span>
+                                  </div>
+                                  <span className="text-[9px] text-slate-500 font-bold tracking-tight">Latency ~20ms (Direct VOIP)</span>
+                                </div>
+                                
+                                <div className="flex flex-col items-center justify-center py-4 space-y-3">
+                                  {/* Audio Visualizer Waves */}
+                                  <div className="flex items-center gap-1.5 h-8">
+                                    {[1, 2, 3, 4, 5, 6, 7
+
+
+
+==================================================
+STEP 168 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+"  const matchedPlan = getMatchedPlan();\n\n  const [callScheduledConfirmed, setCallScheduledConfirmed] = useState(false);\n\n  const confirmScheduleCall = async () => {\n    if (!submittedLeadData || !submittedLeadData.id || !leadForm.scheduledCallAt) return;\n    try {\n      const res = await fetch(\"/api/update-lead-status\", {\n        method: \"PATCH\",\n        headers: { \"Content-Type\": \"application/json\" },\n        body: JSON.stringify({ \n          id: submittedLeadData.id, \n          call_status: 'scheduled',\n          scheduled_call_at: leadForm.scheduledCallAt\n        })\n      });\n      if (res.ok) {\n        setCallScheduledConfirmed(true);\n      }\n    } catch(e) {\n      console.error(e);\n    }\n  };\n\n  const [whatsappSent, setWhatsappSent] = useState(false);\n  const [sendingWhatsapp, setSendingWhatsapp] = useState(false);\n\n  const handleSendWhatsapp = async () => {\n    if (!submittedLeadData || !submittedLeadData.id) return;\n    setSendingWhatsapp(true);\n    try {\n      const res = await fetch(\"/api/send-whatsapp\", {\n        method: \"POST\",\n        headers: { \"Content-Type\": \"application/json\" },\n        body: JSON.stringify({ \n          lead_id: submittedLeadData.id, \n          phone: leadForm.phone,\n          name: leadForm.name || \"Customer\",\n          recommended_plan_id: recommendation?.recommendedPlanId || plans[0].id\n        })\n      });\n      if (res.ok) {\n        setWhatsappSent(true);\n      }\n    } catch(e) {\n      console.error(e);\n    }\n    setSendingWhatsapp(false);\n  };\n\n  // VOIP State Variables\n  const [voipActive, setVoipActive] = useState(false);\n  const [voipStatus, setVoipStatus] = useState<\"idle\" | \"connecting\" | \"connected\" | \"speaking\" | \"listening\">(\"idle\");\n  const [conversationId, setConversationId] = useState(\"\");\n  const [conversationInstance, setConversationInstance] = useState<any>(null);\n\n  const handleStartVoipCall = async () => {\n    if (voipActive) return;\n    setVoipStatus(\"connecting\");\n
+<truncated 2627 bytes>
+
+
+
+==================================================
+STEP 168 TC 0 SUFFIX replacement.txt
+==================================================
+"  const matchedPlan = getMatchedPlan();\n\n  const [callScheduledConfirmed, setCallScheduledConfirmed] = useState(false);\n\n  const confirmScheduleCall = async () => {\n    if (!submittedLeadData || !submittedLeadData.id || !leadForm.scheduledCallAt) return;\n    try {\n      const res = await fetch(\"/api/update-lead-status\", {\n        method: \"PATCH\",\n        headers: { \"Content-Type\": \"application/json\" },\n        body: JSON.stringify({ \n          id: submittedLeadData.id, \n          call_status: 'scheduled',\n          scheduled_call_at: leadForm.scheduledCallAt\n        })\n      });\n      if (res.ok) {\n        setCallScheduledConfirmed(true);\n      }\n    } catch(e) {\n      console.error(e);\n    }\n  };\n\n  const [whatsappSent, setWhatsappSent] = useState(false);\n  const [sendingWhatsapp, setSendingWhatsapp] = useState(false);\n\n  const handleSendWhatsapp = async () => {\n    if (!submittedLeadData || !submittedLeadData.id) return;\n    setSendingWhatsapp(true);\n    try {\n      const res = await fetch(\"/api/send-whatsapp\", {\n        method: \"POST\",\n        headers: { \"Content-Type\": \"application/json\" },\n        body: JSON.stringify({ \n          lead_id: submittedLeadData.id, \n          phone: leadForm.phone,\n          name: leadForm.name || \"Customer\",\n          recommended_plan_id: recommendation?.recommendedPlanId || plans[0].id\n        })\n      });\n      if (res.ok) {\n        setWhatsappSent(true);\n      }\n    } catch(e) {\n      console.error(e);\n    }\n    setSendingWhatsapp(false);\n  };\n\n  // VOIP State Variables\n  const [voipActive, setVoipActive] = useState(false);\n  const [voipStatus, setVoipStatus] = useState<\"idle\" | \"connecting\" | \"connected\" | \"speaking\" | \"listening\">(\"idle\");\n  const [conversationId, setConversationId] = useState(\"\");\n  const [conversationInstance, setConversationInstance] = useState<any>(null);\n\n  const handleStartVoipCall = async () => {\n    if (voipActive) return;\n    setVoipStatus(\"connecting\");\n
+<truncated 2627 bytes>
+
+
+
+==================================================
+STEP 168 TC 0 SUFFIX clean.txt
+==================================================
+  const matchedPlan = getMatchedPlan();
+
+  const [callScheduledConfirmed, setCallScheduledConfirmed] = useState(false);
+
+  const confirmScheduleCall = async () => {
+    if (!submittedLeadData || !submittedLeadData.id || !leadForm.scheduledCallAt) return;
+    try {
+      const res = await fetch("/api/update-lead-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          id: submittedLeadData.id, 
+          call_status: 'scheduled',
+          scheduled_call_at: leadForm.scheduledCallAt
+        })
+      });
+      if (res.ok) {
+        setCallScheduledConfirmed(true);
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const [whatsappSent, setWhatsappSent] = useState(false);
+  const [sendingWhatsapp, setSendingWhatsapp] = useState(false);
+
+  const handleSendWhatsapp = async () => {
+    if (!submittedLeadData || !submittedLeadData.id) return;
+    setSendingWhatsapp(true);
+    try {
+      const res = await fetch("/api/send-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          lead_id: submittedLeadData.id, 
+          phone: leadForm.phone,
+          name: leadForm.name || "Customer",
+          recommended_plan_id: recommendation?.recommendedPlanId || plans[0].id
+        })
+      });
+      if (res.ok) {
+        setWhatsappSent(true);
+      }
+    } catch(e) {
+      console.error(e);
+    }
+    setSendingWhatsapp(false);
+  };
+
+  // VOIP State Variables
+  const [voipActive, setVoipActive] = useState(false);
+  const [voipStatus, setVoipStatus] = useState<"idle" | "connecting" | "connected" | "speaking" | "listening">("idle");
+  const [conversationId, setConversationId] = useState("");
+  const [conversationInstance, setConversationInstance] = useState<any>(null);
+
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+    setVoipStatus("connecting");
+
+
+
+
+==================================================
+STEP 177 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+"                      <div className=\"flex justify-between items-start\">\n                        <div className=\"w-full\">\n                          <span className=\"inline-flex items-center bg-emerald-50 text-emerald-800 border border-emerald-100 text-[9px] px-2.5 py-1 rounded-md font-extrabold uppercase tracking-widest mb-2.5\">\n                            🌟 YOUR RECOMMENDED BEST MATCH\n                          </span>\n                          \n                          <div className=\"flex justify-between items-start w-full gap-4\">\n                            <h4 className=\"text-2xl font-extrabold text-[#00338D] tracking-tight\">{matchedPlan.name}</h4>\n                            \n                            <div className=\"flex items-center gap-2 shrink-0\">\n                               <button onClick={handleSendWhatsapp} disabled={sendingWhatsapp || whatsappSent || !leadForm.phone} className={`p-2 rounded-full transition cursor-pointer disabled:opacity-50 ${whatsappSent ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title=\"Send details to WhatsApp\">\n                                 {whatsappSent ? <CheckCircle2 className=\"w-5 h-5\"/> : <MessageCircle className=\"w-5 h-5\" />}\n                               </button>\n                               <div className=\"relative group/scheduler\">\n                                 <button className=\"p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition cursor-pointer\" title=\"Schedule Call\">\n                                   <Calendar className=\"w-5 h-5\" />\n                                 </button>\n                                 <div className=\"absolute top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl p-4 shadow-xl z-20 hidden group-hover/scheduler:block focus-within:block right-0\">\n                                   <div className=\"text-[11px] font-bold text-slate-700 mb-3 uppercase tracking-wider\">Schedule AI Advisor Call</div>\n        
+<truncated 2841 bytes>
+
+
+
+==================================================
+STEP 177 TC 0 SUFFIX replacement.txt
+==================================================
+"                      <div className=\"flex justify-between items-start\">\n                        <div className=\"w-full\">\n                          <span className=\"inline-flex items-center bg-emerald-50 text-emerald-800 border border-emerald-100 text-[9px] px-2.5 py-1 rounded-md font-extrabold uppercase tracking-widest mb-2.5\">\n                            🌟 YOUR RECOMMENDED BEST MATCH\n                          </span>\n                          \n                          <div className=\"flex justify-between items-start w-full gap-4\">\n                            <h4 className=\"text-2xl font-extrabold text-[#00338D] tracking-tight\">{matchedPlan.name}</h4>\n                            \n                            <div className=\"flex items-center gap-2 shrink-0\">\n                               <button onClick={handleSendWhatsapp} disabled={sendingWhatsapp || whatsappSent || !leadForm.phone} className={`p-2 rounded-full transition cursor-pointer disabled:opacity-50 ${whatsappSent ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title=\"Send details to WhatsApp\">\n                                 {whatsappSent ? <CheckCircle2 className=\"w-5 h-5\"/> : <MessageCircle className=\"w-5 h-5\" />}\n                               </button>\n                               <div className=\"relative group/scheduler\">\n                                 <button className=\"p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition cursor-pointer\" title=\"Schedule Call\">\n                                   <Calendar className=\"w-5 h-5\" />\n                                 </button>\n                                 <div className=\"absolute top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl p-4 shadow-xl z-20 hidden group-hover/scheduler:block focus-within:block right-0\">\n                                   <div className=\"text-[11px] font-bold text-slate-700 mb-3 uppercase tracking-wider\">Schedule AI Advisor Call</div>\n        
+<truncated 2841 bytes>
+
+
+
+==================================================
+STEP 177 TC 0 SUFFIX clean.txt
+==================================================
+                      <div className="flex justify-between items-start">
+                        <div className="w-full">
+                          <span className="inline-flex items-center bg-emerald-50 text-emerald-800 border border-emerald-100 text-[9px] px-2.5 py-1 rounded-md font-extrabold uppercase tracking-widest mb-2.5">
+                            🌟 YOUR RECOMMENDED BEST MATCH
+                          </span>
+                          
+                          <div className="flex justify-between items-start w-full gap-4">
+                            <h4 className="text-2xl font-extrabold text-[#00338D] tracking-tight">{matchedPlan.name}</h4>
+                            
+                            <div className="flex items-center gap-2 shrink-0">
+                               <button onClick={handleSendWhatsapp} disabled={sendingWhatsapp || whatsappSent || !leadForm.phone} className={`p-2 rounded-full transition cursor-pointer disabled:opacity-50 ${whatsappSent ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`} title="Send details to WhatsApp">
+                                 {whatsappSent ? <CheckCircle2 className="w-5 h-5"/> : <MessageCircle className="w-5 h-5" />}
+                               </button>
+                               <div className="relative group/scheduler">
+                                 <button className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full transition cursor-pointer" title="Schedule Call">
+                                   <Calendar className="w-5 h-5" />
+                                 </button>
+                                 <div className="absolute top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl p-4 shadow-xl z-20 hidden group-hover/scheduler:block focus-within:block right-0">
+                                   <div className="text-[11px] font-bold text-slate-700 mb-3 uppercase tracking-wider">Schedule AI Advisor Call</div>
+        
+
+
+
+==================================================
+STEP 183 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+"                        </ul>\n                      </div>\n\n                      {/* Want to know more? */}\n                      <div className=\"pt-2\">\n                        <div className=\"bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center\">\n                          <h4 className=\"text-sm font-black text-blue-900 mb-1\">Want to know more?</h4>\n                          <p className=\"text-xs text-blue-700 font-medium mb-3\">\n                            We will send you the complete policy details over WhatsApp, and you can chat with our AI agent to explore more.\n                          </p>\n                          <div className=\"space-y-2\">\n                            <button\n                              onClick={handleSendWhatsapp}\n                              disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}\n                              className=\"w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50\"\n                            >\n                              <MessageCircle className=\"w-4 h-4\" />\n                              {sendingWhatsapp ? \"Sending Details...\" : whatsappSent ? \"Sent to WhatsApp!\" : \"Send details to WhatsApp\"}\n                            </button>\n\n                            {voipActive ? (\n                              <div className=\"bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800\">\n                                <div className=\"flex justify-between items-center\">\n                                  <div className=\"flex items-center gap-2\">\n                                    <span className=\"w-2 h-2 bg-emerald-500 rounded-full animate-ping\"></span>\n                                    <span className=\"text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest\">\n                       
+<truncated 6821 bytes>
+
+
+
+==================================================
+STEP 183 TC 0 SUFFIX replacement.txt
+==================================================
+"                        </ul>\n                      </div>\n\n                      {/* Want to know more? */}\n                      <div className=\"pt-2\">\n                        <div className=\"bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center\">\n                          <h4 className=\"text-sm font-black text-blue-900 mb-1\">Want to know more?</h4>\n                          <p className=\"text-xs text-blue-700 font-medium mb-3\">\n                            We will send you the complete policy details over WhatsApp, and you can chat with our AI agent to explore more.\n                          </p>\n                          <div className=\"space-y-2\">\n                            <button\n                              onClick={handleSendWhatsapp}\n                              disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}\n                              className=\"w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50\"\n                            >\n                              <MessageCircle className=\"w-4 h-4\" />\n                              {sendingWhatsapp ? \"Sending Details...\" : whatsappSent ? \"Sent to WhatsApp!\" : \"Send details to WhatsApp\"}\n                            </button>\n\n                            {voipActive ? (\n                              <div className=\"bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800\">\n                                <div className=\"flex justify-between items-center\">\n                                  <div className=\"flex items-center gap-2\">\n                                    <span className=\"w-2 h-2 bg-emerald-500 rounded-full animate-ping\"></span>\n                                    <span className=\"text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest\">\n                       
+<truncated 6821 bytes>
+
+
+
+==================================================
+STEP 183 TC 0 SUFFIX clean.txt
+==================================================
+                        </ul>
+                      </div>
+
+                      {/* Want to know more? */}
+                      <div className="pt-2">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+                          <h4 className="text-sm font-black text-blue-900 mb-1">Want to know more?</h4>
+                          <p className="text-xs text-blue-700 font-medium mb-3">
+                            We will send you the complete policy details over WhatsApp, and you can chat with our AI agent to explore more.
+                          </p>
+                          <div className="space-y-2">
+                            <button
+                              onClick={handleSendWhatsapp}
+                              disabled={sendingWhatsapp || whatsappSent || !leadForm.phone}
+                              className="w-full py-2.5 bg-[#00338D] hover:bg-blue-900 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              {sendingWhatsapp ? "Sending Details..." : whatsappSent ? "Sent to WhatsApp!" : "Send details to WhatsApp"}
+                            </button>
+
+                            {voipActive ? (
+                              <div className="bg-slate-900 text-white rounded-xl p-4.5 space-y-4 shadow-xl border border-slate-800">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                                    <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest">
+                       
+
+
+
+==================================================
+STEP 189 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+import { 
+  ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle, 
+  Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
+  Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
+  Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
+} from "lucide-react";
+import { Conversation } from "@elevenlabs/client";
+import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
+
+
+
+==================================================
+STEP 189 TC 0 SUFFIX replacement.txt
+==================================================
+import { 
+  ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle, 
+  Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
+  Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
+  Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
+} from "lucide-react";
+import { Conversation } from "@elevenlabs/client";
+import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
+
+
+
+==================================================
+STEP 291 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+"  const handleStartVoipCall = async () => {\n    if (voipActive) return;\n    setVoipStatus(\"connecting\");\n    setVoipActive(true);\n\n    try {\n      // 1. Attempt to fetch the secure signed URL from the web backend\n      let signed_url: string | null = null;\n      try {\n        const res = await fetch(\"/api/signed-url\");\n        if (res.ok) {\n          const data = await res.json();\n          signed_url = data.signed_url;\n        } else {\n          console.warn(\"Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.\");\n        }\n      } catch (err) {\n        console.warn(\"Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:\", err);\n      }\n\n      // 2. Start the ElevenLabs Conversation session\n      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || \"Family Health Optima\";\n      \n      console.log(`Starting VOIP call for policy: ${policyName}`);\n      \n      const sessionParams: any = {\n        dynamicVariables: {\n          policy: policyName\n        },\n        onConnect: async ({ conversationId }: { conversationId: string }) => {\n          console.log(\"VOIP call connected! Conversation ID:\", conversationId);\n          setConversationId(conversationId);\n          setVoipStatus(\"connected\");\n\n          // 3. Link the conversation ID to our database lead\n          if (submittedLeadData?.id) {\n            try {\n              await fetch(\"/api/register-conversation\", {\n                method: \"POST\",\n                headers: { \"Content-Type\": \"application/json\" },\n                body: JSON.stringify({\n                  leadId: submittedLeadData.id,\n                  conversationId: conversationId\n                })\n              });\n            } catch (err) {\n              console.error(\"Failed to register conversation in database:\", err);\n            }\n          }\n        },\n      
+<truncated 1149 bytes>
+
+
+
+==================================================
+STEP 291 TC 0 SUFFIX replacement.txt
+==================================================
+"  const handleStartVoipCall = async () => {\n    if (voipActive) return;\n    setVoipStatus(\"connecting\");\n    setVoipActive(true);\n\n    try {\n      // 1. Attempt to fetch the secure signed URL from the web backend\n      let signed_url: string | null = null;\n      try {\n        const res = await fetch(\"/api/signed-url\");\n        if (res.ok) {\n          const data = await res.json();\n          signed_url = data.signed_url;\n        } else {\n          console.warn(\"Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.\");\n        }\n      } catch (err) {\n        console.warn(\"Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:\", err);\n      }\n\n      // 2. Start the ElevenLabs Conversation session\n      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || \"Family Health Optima\";\n      \n      console.log(`Starting VOIP call for policy: ${policyName}`);\n      \n      const sessionParams: any = {\n        dynamicVariables: {\n          policy: policyName\n        },\n        onConnect: async ({ conversationId }: { conversationId: string }) => {\n          console.log(\"VOIP call connected! Conversation ID:\", conversationId);\n          setConversationId(conversationId);\n          setVoipStatus(\"connected\");\n\n          // 3. Link the conversation ID to our database lead\n          if (submittedLeadData?.id) {\n            try {\n              await fetch(\"/api/register-conversation\", {\n                method: \"POST\",\n                headers: { \"Content-Type\": \"application/json\" },\n                body: JSON.stringify({\n                  leadId: submittedLeadData.id,\n                  conversationId: conversationId\n                })\n              });\n            } catch (err) {\n              console.error(\"Failed to register conversation in database:\", err);\n            }\n          }\n        },\n      
+<truncated 1149 bytes>
+
+
+
+==================================================
+STEP 291 TC 0 SUFFIX clean.txt
+==================================================
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+    try {
+      // 1. Attempt to fetch the secure signed URL from the web backend
+      let signed_url: string | null = null;
+      try {
+        const res = await fetch("/api/signed-url");
+        if (res.ok) {
+          const data = await res.json();
+          signed_url = data.signed_url;
+        } else {
+          console.warn("Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.");
+        }
+      } catch (err) {
+        console.warn("Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:", err);
+      }
+
+      // 2. Start the ElevenLabs Conversation session
+      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
+      
+      console.log(`Starting VOIP call for policy: ${policyName}`);
+      
+      const sessionParams: any = {
+        dynamicVariables: {
+          policy: policyName
+        },
+        onConnect: async ({ conversationId }: { conversationId: string }) => {
+          console.log("VOIP call connected! Conversation ID:", conversationId);
+          setConversationId(conversationId);
+          setVoipStatus("connected");
+
+          // 3. Link the conversation ID to our database lead
+          if (submittedLeadData?.id) {
+            try {
+              await fetch("/api/register-conversation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  leadId: submittedLeadData.id,
+                  conversationId: conversationId
+                })
+              });
+            } catch (err) {
+              console.error("Failed to register conversation in database:", err);
+            }
+          }
+        },
+      
+
+
+
+==================================================
+STEP 297 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+      // 2. Start the ElevenLabs Conversation session
+      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
+      const customerName = leadForm.name || "Customer";
+      
+      console.log(`Starting VOIP call for policy: ${policyName}, customer: ${customerName}`);
+      
+      const sessionParams: any = {
+        dynamicVariables: {
+          policy: policyName,
+          customer_name: customerName
+        },
+
+
+
+==================================================
+STEP 297 TC 0 SUFFIX replacement.txt
+==================================================
+      // 2. Start the ElevenLabs Conversation session
+      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
+      const customerName = leadForm.name || "Customer";
+      
+      console.log(`Starting VOIP call for policy: ${policyName}, customer: ${customerName}`);
+      
+      const sessionParams: any = {
+        dynamicVariables: {
+          policy: policyName,
+          customer_name: customerName
+        },
+
+
+
+==================================================
+STEP 328 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+      // 1. Attempt to fetch the secure signed URL from the web backend
+      let signed_url: string | null = null;
+      let fallbackAgentId = "agent_9101kvjj8g1cecatsrr130tgv6rn";
+      try {
+        const res = await fetch("/api/signed-url");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.usePublicAgent) {
+            console.log("Backend recommended using public agent directly.");
+            fallbackAgentId = data.agentId || fallbackAgentId;
+          } else {
+            signed_url = data.signed_url;
+          }
+        } else {
+          console.warn("Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.");
+        }
+      } catch (err) {
+        console.warn("Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:", err);
+      }
+
+
+
+==================================================
+STEP 328 TC 0 SUFFIX replacement.txt
+==================================================
+      // 1. Attempt to fetch the secure signed URL from the web backend
+      let signed_url: string | null = null;
+      let fallbackAgentId = "agent_9101kvjj8g1cecatsrr130tgv6rn";
+      try {
+        const res = await fetch("/api/signed-url");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.usePublicAgent) {
+            console.log("Backend recommended using public agent directly.");
+            fallbackAgentId = data.agentId || fallbackAgentId;
+          } else {
+            signed_url = data.signed_url;
+          }
+        } else {
+          console.warn("Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.");
+        }
+      } catch (err) {
+        console.warn("Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:", err);
+      }
+
+
+
+==================================================
+STEP 332 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+      if (signed_url) {
+        console.log("Connecting using secure signed URL from backend.");
+        sessionParams.signedUrl = signed_url;
+      } else {
+        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+        sessionParams.agentId = fallbackAgentId;
+      }
+
+
+
+==================================================
+STEP 332 TC 0 SUFFIX replacement.txt
+==================================================
+      if (signed_url) {
+        console.log("Connecting using secure signed URL from backend.");
+        sessionParams.signedUrl = signed_url;
+      } else {
+        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+        sessionParams.agentId = fallbackAgentId;
+      }
+
+
+
+==================================================
+STEP 406 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+        onError: (err: any) => {
+          console.error("VOIP call error:", err);
+          alert("VOIP call error callback: " + (err.message || JSON.stringify(err)));
+          setVoipStatus("idle");
+          setVoipActive(false);
+          setConversationInstance(null);
+        },
+        onModeChange: ({ mode }: { mode: "speaking" | "listening" }) => {
+          setVoipStatus(mode);
+        }
+      };
+
+      if (signed_url) {
+        console.log("Connecting using secure signed URL from backend.");
+        sessionParams.signedUrl = signed_url;
+      } else {
+        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+        sessionParams.agentId = fallbackAgentId;
+      }
+
+      const conv = await Conversation.startSession(sessionParams);
+      setConversationInstance(conv);
+    } catch (err: any) {
+      console.error("Error starting VOIP session:", err);
+      alert("Error starting VOIP session: " + (err.message || err));
+      setVoipStatus("idle");
+      setVoipActive(false);
+    }
+
+
+
+==================================================
+STEP 406 TC 0 SUFFIX replacement.txt
+==================================================
+        onError: (err: any) => {
+          console.error("VOIP call error:", err);
+          alert("VOIP call error callback: " + (err.message || JSON.stringify(err)));
+          setVoipStatus("idle");
+          setVoipActive(false);
+          setConversationInstance(null);
+        },
+        onModeChange: ({ mode }: { mode: "speaking" | "listening" }) => {
+          setVoipStatus(mode);
+        }
+      };
+
+      if (signed_url) {
+        console.log("Connecting using secure signed URL from backend.");
+        sessionParams.signedUrl = signed_url;
+      } else {
+        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+        sessionParams.agentId = fallbackAgentId;
+      }
+
+      const conv = await Conversation.startSession(sessionParams);
+      setConversationInstance(conv);
+    } catch (err: any) {
+      console.error("Error starting VOIP session:", err);
+      alert("Error starting VOIP session: " + (err.message || err));
+      setVoipStatus("idle");
+      setVoipActive(false);
+    }
+
+
+
+==================================================
+STEP 406 TC 0 SUFFIX clean.txt
+==================================================
+        onError: (err: any) => {
+          console.error("VOIP call error:", err);
+          alert("VOIP call error callback: " + (err.message || JSON.stringify(err)));
+          setVoipStatus("idle");
+          setVoipActive(false);
+          setConversationInstance(null);
+        },
+        onModeChange: ({ mode }: { mode: "speaking" | "listening" }) => {
+          setVoipStatus(mode);
+        }
+      };
+
+      if (signed_url) {
+        console.log("Connecting using secure signed URL from backend.");
+        sessionParams.signedUrl = signed_url;
+      } else {
+        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
+        sessionParams.agentId = fallbackAgentId;
+      }
+
+      const conv = await Conversation.startSession(sessionParams);
+      setConversationInstance(conv);
+    } catch (err: any) {
+      console.error("Error starting VOIP session:", err);
+      alert("Error starting VOIP session: " + (err.message || err));
+      setVoipStatus("idle");
+      setVoipActive(false);
+    }
+
+
+
+==================================================
+STEP 412 TC 0 SUFFIX ReplacementContent.txt
+==================================================
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+
+    // Check if browser is in a secure context (localhost or https) allowing media devices access
+    if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Microphone access is disabled. Please ensure you are accessing the page via 'http://localhost:3000' or 'http://127.0.0.1:3000' (browsers restrict microphone access to localhost or HTTPS).");
+      return;
+    }
+
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+
+
+==================================================
+STEP 412 TC 0 SUFFIX replacement.txt
+==================================================
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+
+    // Check if browser is in a secure context (localhost or https) allowing media devices access
+    if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Microphone access is disabled. Please ensure you are accessing the page via 'http://localhost:3000' or 'http://127.0.0.1:3000' (browsers restrict microphone access to localhost or HTTPS).");
+      return;
+    }
+
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+
+
+==================================================
+STEP 412 TC 0 SUFFIX clean.txt
+==================================================
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+
+    // Check if browser is in a secure context (localhost or https) allowing media devices access
+    if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Microphone access is disabled. Please ensure you are accessing the page via 'http://localhost:3000' or 'http://127.0.0.1:3000' (browsers restrict microphone access to localhost or HTTPS).");
+      return;
+    }
+
+    setVoipStatus("connecting");
+    setVoipActive(true);
+
+

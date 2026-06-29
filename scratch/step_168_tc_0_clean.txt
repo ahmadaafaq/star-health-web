@@ -1,0 +1,59 @@
+  const matchedPlan = getMatchedPlan();
+
+  const [callScheduledConfirmed, setCallScheduledConfirmed] = useState(false);
+
+  const confirmScheduleCall = async () => {
+    if (!submittedLeadData || !submittedLeadData.id || !leadForm.scheduledCallAt) return;
+    try {
+      const res = await fetch("/api/update-lead-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          id: submittedLeadData.id, 
+          call_status: 'scheduled',
+          scheduled_call_at: leadForm.scheduledCallAt
+        })
+      });
+      if (res.ok) {
+        setCallScheduledConfirmed(true);
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const [whatsappSent, setWhatsappSent] = useState(false);
+  const [sendingWhatsapp, setSendingWhatsapp] = useState(false);
+
+  const handleSendWhatsapp = async () => {
+    if (!submittedLeadData || !submittedLeadData.id) return;
+    setSendingWhatsapp(true);
+    try {
+      const res = await fetch("/api/send-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          lead_id: submittedLeadData.id, 
+          phone: leadForm.phone,
+          name: leadForm.name || "Customer",
+          recommended_plan_id: recommendation?.recommendedPlanId || plans[0].id
+        })
+      });
+      if (res.ok) {
+        setWhatsappSent(true);
+      }
+    } catch(e) {
+      console.error(e);
+    }
+    setSendingWhatsapp(false);
+  };
+
+  // VOIP State Variables
+  const [voipActive, setVoipActive] = useState(false);
+  const [voipStatus, setVoipStatus] = useState<"idle" | "connecting" | "connected" | "speaking" | "listening">("idle");
+  const [conversationId, setConversationId] = useState("");
+  const [conversationInstance, setConversationInstance] = useState<any>(null);
+
+  const handleStartVoipCall = async () => {
+    if (voipActive) return;
+    setVoipStatus("connecting");

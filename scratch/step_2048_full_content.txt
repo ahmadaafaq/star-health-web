@@ -1,0 +1,33 @@
+Created At: 2026-06-21T13:07:22Z
+Completed At: 2026-06-21T13:07:22Z
+File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/scratch/view_step_1547_content.txt`
+Total Lines: 25
+Total Bytes: 1795
+Showing lines 1 to 25
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: Created At: 2026-06-21T11:56:21Z
+2: Completed At: 2026-06-21T11:56:21Z
+3: File Path: `file:///Users/apple/Documents/ai%20-%20projects/star-health-web/src/components/AIAdvisor.tsx`
+4: Total Lines: 1923
+5: Total Bytes: 110148
+6: Showing lines 610 to 625
+7: The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+8: 610: 
+9: 611:         {/* Wizard Card Body */}
+10: 612:         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden min-h-[480px]">
+11: 613: 
+12: 614:           {/* Confetti effect when recommendation is ready */}
+13: 615:           {recommendation && <Confetti />}
+14: 616: 
+15: 617:           <AnimatePresence mode="wait">
+16: 618:             {!recommendation ? (
+17: 619:               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+18: 620: 
+19: 621:                 {/* Left Column: Moral Narrative Panel */}
+20: 622:                 <div className="lg:col-span-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden border border-slate-800 shadow-lg min-h-[300px]">
+21: 623:                   {/* Background decoration glow */}
+22: 624:                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
+23: 625:                   <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+24: The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+25: 
+The above content shows the entire, complete file contents of the requested file.

@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": "false",
+  "Description": "\"Define activeCarouselIndex, loadingStep states and the useEffect rotation logic in AIAdvisor.tsx.\"",
+  "EndLine": "111",
+  "Instruction": "\"Add state variables for activeCarouselIndex and loadingStep, and the useEffect logic to rotate them during loading.\"",
+  "ReplacementContent": "\"  const [showAilmentSuggestions, setShowAilmentSuggestions] = useState<boolean>(false);\\n\\n  const [activeCarouselIndex, setActiveCarouselIndex] = useState<number>(0);\\n  const [loadingStep, setLoadingStep] = useState<number>(0);\\n\\n  useEffect(() => {\\n    let carouselInterval: any;\\n    let stepInterval: any;\\n\\n    if (loading) {\\n      setActiveCarouselIndex(0);\\n      setLoadingStep(0);\\n\\n      carouselInterval = setInterval(() => {\\n        setActiveCarouselIndex(prev => (prev + 1) % TRUST_CAROUSEL_ITEMS.length);\\n      }, 1250);\\n\\n      stepInterval = setInterval(() => {\\n        setLoadingStep(prev => {\\n          if (prev < LOADER_STEPS.length - 1) {\\n            return prev + 1;\\n          }\\n          return prev;\\n        });\\n      }, 900);\\n    } else {\\n      setActiveCarouselIndex(0);\\n      setLoadingStep(0);\\n    }\\n\\n    return () => {\\n      clearInterval(carouselInterval);\\n      clearInterval(stepInterval);\\n    };\\n  }, [loading]);\\n\\n  // Hardcoded list of common pre-existing conditions\"",
+  "StartLine": "108",
+  "TargetContent": "\"  const [showAilmentSuggestions, setShowAilmentSuggestions] = useState<boolean>(false);\\n\\n  // Hardcoded list of common pre-existing conditions\"",
+  "TargetFile": "\"/Users/apple/Documents/ai - projects/star-health-web/src/components/AIAdvisor.tsx\"",
+  "toolAction": "\"Adding activeCarouselIndex, loadingStep states and useEffect logic to AIAdvisor.tsx\"",
+  "toolSummary": "\"Adding states and useEffect to AIAdvisor.tsx\""
+}
