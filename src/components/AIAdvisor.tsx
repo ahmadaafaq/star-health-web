@@ -6,7 +6,7 @@ import {
   Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
   Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
 } from "lucide-react";
-import { Conversation } from "@elevenlabs/client";
+import { Room, RoomEvent } from "livekit-client";
 import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
 
 const COMMON_AILMENTS_LIST = [
@@ -616,7 +616,6 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
   const handleStartVoipCall = async () => {
     if (voipActive) return;
 
-    // Check if browser is in a secure context (localhost or https) allowing media devices access
     if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert("Microphone access is disabled. Please ensure you are accessing the page via 'http://localhost:3000' or 'http://127.0.0.1:3000' (browsers restrict microphone access to localhost or HTTPS).");
       return;
@@ -626,196 +625,75 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
     setVoipActive(true);
 
     try {
-      // 1. Attempt to fetch the secure signed URL from the web backend
-      let signed_url: string | null = null;
-      let fallbackAgentId = "agent_9101kvjj8g1cecatsrr130tgv6rn";
+      // 1. Fetch the LiveKit WebRTC credentials from our web backend
+      let token: string | null = null;
+      let roomName: string | null = null;
+      let livekitUrl: string | null = null;
+
       try {
-        const res = await fetch("/api/signed-url");
+        const leadId = submittedLeadData?.id || "";
+        const res = await fetch(`/api/livekit-token?leadId=${encodeURIComponent(leadId)}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.usePublicAgent) {
-            console.log("Backend recommended using public agent directly.");
-            fallbackAgentId = data.agentId || fallbackAgentId;
-          } else {
-            signed_url = data.signed_url;
-          }
+          token = data.token;
+          roomName = data.roomName;
+          livekitUrl = data.livekitUrl;
         } else {
-          console.warn("Backend signed-url endpoint returned non-OK status. Falling back to public Agent ID client-side initiation.");
+          throw new Error("Failed to fetch LiveKit token from backend");
         }
-      } catch (err) {
-        console.warn("Failed to connect to backend signed-url endpoint. Falling back to public Agent ID client-side initiation:", err);
+      } catch (err: any) {
+        console.error("Error fetching LiveKit token:", err);
+        alert("Failed to initiate voice session: " + err.message);
+        setVoipStatus("idle");
+        setVoipActive(false);
+        return;
       }
 
-      // 2. Start the ElevenLabs Conversation session
-      const policyName = plans.find(p => p.id === recommendation?.recommendedPlanId)?.name || matchedPlan?.name || "Family Health Optima";
-      const customerName = leadForm.name || "Customer";
-
-      let designation = "Sir / Ma'am";
-      if (submittedLeadData?.gender === "male") designation = "Sir";
-      else if (submittedLeadData?.gender === "female") designation = "Ma'am";
-
-      console.log(`Starting VOIP call for policy: ${policyName}, customer: ${customerName}, designation: ${designation}`);
-
-      const triggerWhatsAppSend = async () => {
-        try {
-          const phoneToUse = leadForm.phone || submittedLeadData?.phone || "";
-          const nameToUse = leadForm.name || submittedLeadData?.name || "Customer";
-          const leadIdToUse = submittedLeadData?.id || "";
-          const planIdToUse = recommendation?.recommendedPlanId || matchedPlan?.id || plans[0].id;
-
-          if (!phoneToUse) {
-            console.warn("Cannot send WhatsApp: phone number is missing.");
-            return { success: false, error: "Phone number is missing." };
-          }
-
-          const res = await fetch("/api/send-whatsapp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              lead_id: leadIdToUse,
-              phone: phoneToUse,
-              name: nameToUse,
-              recommended_plan_id: planIdToUse
-            })
-          });
-          if (res.ok) {
-            setWhatsappSent(true);
-            return { success: true, message: "WhatsApp message sent successfully" };
-          } else {
-            const errData = await res.json().catch(() => ({}));
-            return { success: false, error: errData.error || "Failed to send WhatsApp message" };
-          }
-        } catch (err: any) {
-          console.error("Error in triggerWhatsAppSend helper:", err);
-          return { success: false, error: err.message };
-        }
-      };
-
-      // ── Build rich profile context for ElevenLabs session ──────────────────
-      // Mirrors what the Twilio outbound webhook injects, so the browser VOIP
-      // agent has the same zero-latency full-context experience.
-      const ped: string[] = [
-        ...(formData.preExisting.filter((d: string) => d !== 'none')),
-        ...(formData.diabetes && !formData.preExisting.includes('diabetes') ? ['diabetes'] : [])
-      ];
-      const preExistingConditions = ped.length > 0 ? ped.join(', ') : 'none';
-      const customerMembers = formData.members.length > 0 ? formData.members.join(', ') : 'not specified';
-      const customerProfileSummary = [
-        formData.age ? `${formData.age} years old` : '',
-        formData.members.length > 0 ? `family: ${formData.members.join(', ')}` : '',
-        formData.city || '',
-        formData.budget ? `${formData.budget} budget` : '',
-        ped.length > 0 ? `conditions: ${ped.join(', ')}` : ''
-      ].filter(Boolean).join(' | ') || 'Profile not available';
-
-      // Use the AI-generated whyExplanation from the recommendation engine as the
-      // "why this plan" context — it's already personalized to the customer's profile.
-      const whyThisPlan = recommendation?.whyExplanation
-        || `The ${policyName} was recommended based on your health profile and family requirements. It provides the right balance of coverage, premium, and benefits tailored to your situation.`;
-
-      const sessionParams: any = {
-        dynamicVariables: {
-          // ── Identity ────────────────────────────────────────────────────
-          name: customerName,
-          customer_name: customerName,
-          customerName: customerName,
-          user_name: customerName,
-          userName: customerName,
-          designation,
-          designationName: designation,
-          designation_name: designation,
-
-          // ── Recommended plan ────────────────────────────────────────────
-          policy: policyName,
-          policyName: policyName,
-          policy_name: policyName,
-          recommended_plan: policyName,
-          recommended_policy: policyName,
-          recommended_plan_name: policyName,
-
-          // ── Why this plan was chosen (personalized AI explanation) ───────
-          why_this_plan: whyThisPlan,
-
-          // ── Customer profile snapshot ────────────────────────────────────
-          customer_profile_summary: customerProfileSummary,
-          customer_age: formData.age || '',
-          customer_city: formData.city || '',
-          customer_budget: formData.budget || '',
-          customer_members: customerMembers,
-          has_diabetes: formData.diabetes ? 'yes' : 'no',
-          has_parents: formData.parentsIncluded ? 'yes' : 'no',
-          has_employer_insurance: formData.employerInsurance ? 'yes' : 'no',
-          needs_maternity: formData.pregnancyPlan ? 'yes' : 'no',
-          pre_existing_conditions: preExistingConditions,
-
-          // ── Full policy catalog (zero per-turn retrieval latency) ────────
-          all_plans_context: STAR_HEALTH_PLANS_CONTEXT,
-        },
-        clientTools: {
-          sendWhatsAppDetails: async (args: any) => {
-            console.log("ElevenLabs Agent triggered sendWhatsAppDetails with args:", args);
-            return await triggerWhatsAppSend();
-          },
-          send_whatsapp: async (args: any) => {
-            console.log("ElevenLabs Agent triggered send_whatsapp with args:", args);
-            return await triggerWhatsAppSend();
-          },
-          send_details_over_whatsapp: async (args: any) => {
-            console.log("ElevenLabs Agent triggered send_details_over_whatsapp with args:", args);
-            return await triggerWhatsAppSend();
-          },
-          sendDetailsOverWhatsApp: async (args: any) => {
-            console.log("ElevenLabs Agent triggered sendDetailsOverWhatsApp with args:", args);
-            return await triggerWhatsAppSend();
-          },
-          send_whatsapp_details: async (args: any) => {
-            console.log("ElevenLabs Agent triggered send_whatsapp_details with args:", args);
-            return await triggerWhatsAppSend();
-          }
-        },
-        onConnect: async ({ conversationId }: { conversationId: string }) => {
-          console.log("VOIP call connected! Conversation ID:", conversationId);
-          setConversationId(conversationId);
-          setVoipStatus("connected");
-
-          // 3. Link the conversation ID to our database lead
-          if (submittedLeadData?.id) {
-            try {
-              await fetch("/api/register-conversation", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  leadId: submittedLeadData.id,
-                  conversationId: conversationId
-                })
-              });
-            } catch (err) {
-              console.error("Failed to register conversation in database:", err);
-            }
-          }
-        },
-        onError: (err: any) => {
-          console.error("VOIP call error:", err);
-          alert("VOIP call error callback: " + (err.message || JSON.stringify(err)));
-          setVoipStatus("idle");
-          setVoipActive(false);
-          setConversationInstance(null);
-        },
-        onModeChange: ({ mode }: { mode: "speaking" | "listening" }) => {
-          setVoipStatus(mode);
-        }
-      };
-
-      if (signed_url) {
-        console.log("Connecting using secure signed URL from backend.");
-        sessionParams.signedUrl = signed_url;
-      } else {
-        console.log(`Connecting directly using public agent ID (client-side initiation): ${fallbackAgentId}`);
-        sessionParams.agentId = fallbackAgentId;
+      if (!token || !livekitUrl) {
+        alert("Failed to retrieve valid WebRTC credentials");
+        setVoipStatus("idle");
+        setVoipActive(false);
+        return;
       }
 
-      const conv = await Conversation.startSession(sessionParams);
-      setConversationInstance(conv);
+      // 2. Initialize the LiveKit Room session
+      console.log(`Connecting to LiveKit Room: ${roomName} at url ${livekitUrl}`);
+      
+      const room = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+      });
+
+      // Handle connection success
+      room.on(RoomEvent.Connected, () => {
+        console.log("VOIP call connected to LiveKit Cloud!");
+        setVoipStatus("connected");
+        // Also register the conversation ID if possible
+        setConversationId(roomName || "livekit-room");
+      });
+
+      // Handle connection disconnected
+      room.on(RoomEvent.Disconnected, () => {
+        console.log("VOIP call disconnected");
+        setVoipStatus("idle");
+        setVoipActive(false);
+        setConversationInstance(null);
+      });
+
+      // Detect active speakers to animate speaking/listening status
+      room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+        const agentIsSpeaking = speakers.some(s => !s.isLocal);
+        setVoipStatus(agentIsSpeaking ? "speaking" : "listening");
+      });
+
+      // Connect to the LiveKit room
+      await room.connect(livekitUrl, token);
+      
+      // Request microphone permissions and publish microphone audio track
+      await room.localParticipant.enableCameraAndMicrophonePlayback();
+      await room.localParticipant.setMicrophoneEnabled(true);
+      
+      setConversationInstance(room);
     } catch (err: any) {
       console.error("Error starting VOIP session:", err);
       alert("Error starting VOIP session: " + (err.message || err));
@@ -827,7 +705,7 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
   const handleEndVoipCall = async () => {
     if (conversationInstance) {
       try {
-        await conversationInstance.endSession();
+        await conversationInstance.disconnect();
       } catch (err) {
         console.error("Error ending VOIP session:", err);
       }
