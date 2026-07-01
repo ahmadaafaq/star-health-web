@@ -4,7 +4,7 @@ import {
   ArrowRight, ArrowLeft, Loader2, Play, Sparkles, CheckCircle,
   Baby, AlertOctagon, HelpCircle, Heart, Shield, Activity, DollarSign, CloudLightning,
   Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
-  Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
+  Calendar, MessageCircle, Phone, PhoneOff, Mic, MicOff, Volume2
 } from "lucide-react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
@@ -612,6 +612,7 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
   const [voipStatus, setVoipStatus] = useState<"idle" | "connecting" | "connected" | "speaking" | "listening">("idle");
   const [conversationId, setConversationId] = useState("");
   const [conversationInstance, setConversationInstance] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
 
   const handleStartVoipCall = async () => {
     if (voipActive) return;
@@ -623,6 +624,7 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
 
     setVoipStatus("connecting");
     setVoipActive(true);
+    setIsMuted(false);
 
     try {
       // 1. Fetch the LiveKit WebRTC credentials from our web backend
@@ -734,6 +736,19 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
     setVoipStatus("idle");
     setVoipActive(false);
     setConversationInstance(null);
+    setIsMuted(false);
+  };
+
+  const handleToggleMute = async () => {
+    if (conversationInstance) {
+      try {
+        const newMuteState = !isMuted;
+        await conversationInstance.localParticipant.setMicrophoneEnabled(!newMuteState);
+        setIsMuted(newMuteState);
+      } catch (err) {
+        console.error("Error toggling mute:", err);
+      }
+    }
   };
 
   return (
@@ -1830,13 +1845,27 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
                                       </div>
                                     </div>
 
-                                    <button
-                                      onClick={handleEndVoipCall}
-                                      className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-red-900/10"
-                                    >
-                                      <PhoneOff className="w-4 h-4" />
-                                      <span>End Direct Call</span>
-                                    </button>
+                                    <div className="flex gap-2 w-full">
+                                      <button
+                                        onClick={handleToggleMute}
+                                        className={`flex-1 py-2 font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer shadow-md ${
+                                          isMuted
+                                            ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-900/10"
+                                            : "bg-slate-800 hover:bg-slate-700 text-slate-300 shadow-slate-950/20 border border-slate-700"
+                                        }`}
+                                      >
+                                        {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                        <span>{isMuted ? "Unmute" : "Mute"}</span>
+                                      </button>
+
+                                      <button
+                                        onClick={handleEndVoipCall}
+                                        className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-red-900/10"
+                                      >
+                                        <PhoneOff className="w-4 h-4" />
+                                        <span>End Call</span>
+                                      </button>
+                                    </div>
                                   </div>
                                 ) : (
                                   <button
