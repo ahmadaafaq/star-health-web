@@ -6,7 +6,7 @@ import {
   Check, Info, Award, Scale, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
   Calendar, MessageCircle, Phone, PhoneOff, Mic, Volume2
 } from "lucide-react";
-import { Room, RoomEvent } from "livekit-client";
+import { Room, RoomEvent, Track } from "livekit-client";
 import { RecommendationRequest, RecommendationResponse, Plan } from "../types";
 
 const COMMON_AILMENTS_LIST = [
@@ -664,6 +664,25 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
         dynacast: true,
       });
 
+      // Automatically play incoming audio tracks from the agent
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === "audio") {
+          console.log("Subscribed to agent audio track, attaching to DOM...");
+          const element = track.attach();
+          element.id = `livekit-audio-${track.sid}`;
+          document.body.appendChild(element);
+        }
+      });
+
+      // Cleanup audio tracks on unsubscribe
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        const el = document.getElementById(`livekit-audio-${track.sid}`);
+        if (el) {
+          el.remove();
+        }
+        track.detach();
+      });
+
       // Handle connection success
       room.on(RoomEvent.Connected, () => {
         console.log("VOIP call connected to LiveKit Cloud!");
@@ -678,6 +697,8 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
         setVoipStatus("idle");
         setVoipActive(false);
         setConversationInstance(null);
+        // Clean up any remaining audio tags
+        document.querySelectorAll("[id^='livekit-audio-']").forEach(el => el.remove());
       });
 
       // Detect active speakers to animate speaking/listening status
