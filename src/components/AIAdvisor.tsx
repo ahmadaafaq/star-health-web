@@ -690,8 +690,8 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
       await room.connect(livekitUrl, token);
       
       // Request microphone permissions and publish microphone audio track
-      await room.localParticipant.enableCameraAndMicrophonePlayback();
       await room.localParticipant.setMicrophoneEnabled(true);
+      await room.startAudio();
       
       setConversationInstance(room);
     } catch (err: any) {
