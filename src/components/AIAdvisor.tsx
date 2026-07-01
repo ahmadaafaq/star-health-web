@@ -118,6 +118,24 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
     scheduledCallAt?: string;
   }>({ name: "", email: "", phone: "", gender: "" });
   const [submittedLeadData, setSubmittedLeadData] = useState<any>(null);
+
+  // Restore lead from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("star_health_submitted_lead");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.id) {
+            setSubmittedLeadData(parsed);
+            setLeadSubmitted(true);
+          }
+        } catch (e) {
+          console.error("Error parsing saved lead:", e);
+        }
+      }
+    }
+  }, []);
   const [consentChecked, setConsentChecked] = useState<boolean>(false);
   const [showValidationErrors, setShowValidationErrors] = useState<boolean>(false);
   const [customAilmentInput, setCustomAilmentInput] = useState<string>("");
@@ -532,6 +550,9 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
           setLeadSubmitted(true);
         }
         setSubmittedLeadData(leadData.lead);
+        if (leadData.lead && leadData.lead.id) {
+          localStorage.setItem("star_health_submitted_lead", JSON.stringify(leadData.lead));
+        }
       }
     } catch (e) {
       console.error("Autosave lead failed:", e);
@@ -633,7 +654,10 @@ export default function AIAdvisor({ onRecommendationReceived, plans }: AIAdvisor
       let livekitUrl: string | null = null;
 
       try {
-        const leadId = submittedLeadData?.id || "";
+        let leadId = submittedLeadData?.id || "";
+        if (leadId === "undefined" || leadId === "null") {
+          leadId = "";
+        }
         const res = await fetch(`/api/livekit-token?leadId=${encodeURIComponent(leadId)}`);
         if (res.ok) {
           const data = await res.json();

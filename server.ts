@@ -635,11 +635,14 @@ app.post("/api/send-whatsapp", async (req, res) => {
 // Endpoint to fetch LiveKit token for browser WebRTC VOIP calls
 app.get("/api/livekit-token", async (req, res) => {
   try {
-    const leadId = req.query.leadId;
+    let leadId = req.query.leadId as string;
+    if (leadId === "undefined" || leadId === "null" || !leadId) {
+      leadId = "";
+    }
     const voiceAgentUrl = process.env.VOICE_AGENT_URL || "http://localhost:4000";
     console.log(`Generating LiveKit WebRTC token for lead: ${leadId}`);
     
-    const response = await fetch(`${voiceAgentUrl}/api/voice/token?leadId=${leadId || ""}`);
+    const response = await fetch(`${voiceAgentUrl}/api/voice/token?leadId=${leadId}`);
     if (!response.ok) {
       const errText = await response.text();
       throw new Error(`Voice agent token error: ${response.status} ${errText}`);
